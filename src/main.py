@@ -15,7 +15,7 @@ if __name__ == "__main__":
 
     # TODO: Initialize the connection with the Google Calendar API.
     calendar_events = google_calendar.get_next_24hr_events(service)
-    print(calendar_events)
+    print)
 
     # TODO: Obtain a list of the current day's calendar events that take place at a specific time and at a specific location.
 

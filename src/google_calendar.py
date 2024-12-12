@@ -47,19 +47,62 @@ def initialize_connection():
 def get_next_24hr_events(service):
     """Function to obtain today's events stored in Google Calendar"""
     page_token = None
-
-    # TODO: Obtain the current date of when this program is running.
-
-    # TODO: Calculate the end date of the current date.
-
-    # TODO: Input the the lower and upper bound time into the timeMax and timeMin parameters of the list event api function.
+    calendar_events = []
 
     while True:
-        events = (
-            service.events().list(calendarId="primary", pageToken=page_token).execute()
+        # Obtain the current day events at the start of the day (0th hour) and the end of the day right before the 24th hour.
+        now = datetime.datetime.utcnow()
+        start_of_day = (
+            datetime.datetime(now.year, now.month, now.day, 0, 0, 0).isoformat() + "Z"
         )
-        for event in events["items"]:
-            print(event["summary"])
-        page_token = events.get("nextPageToken")
-        if not page_token:
-            break
+        end_of_day = (
+            datetime.datetime(now.year, now.month, now.day, 23, 59, 59).isoformat()
+            + "Z"
+        )
+
+        # Obtain the events for the current day.
+        events_result = (
+            service.events()
+            .list(
+                calendarId="primary",
+                timeMin=start_of_day,
+                timeMax=end_of_day,
+                singleEvents=True,
+                orderBy="startTime",
+            )
+            .execute()
+        )
+
+        # Obtain the events from the events_result dictionary.
+        events = events_result.get("items", [])
+
+        # If there are no events, print a message to the user.
+        if not events:
+            print("No events found for today.")
+            return
+
+        for i, event in enumerate(events):
+            # Get the start and end time of the calendar events.
+            start = event.get("start", {})
+            end = event.get("end", {})
+
+            # Obtain the start and summary of the i-th calendar event.
+            start = event.get("start", {}).get(
+                "dateTime", event.get("start", {}).get("date", "No Start Time")
+            )
+            end = event.get("end", {}).get(
+                "dateTime", event.get("end", {}).get("date", "No End Time")
+            )
+            summary = event.get("summary", "No Title")
+
+            # Assess whether the event type is all day or timed and save the calendar data as needed.
+            if "dateTime" in start:
+                calendar_events.append(
+                    ["all_day", event.get("summary", "No Title"), start, end]
+                )
+            else:
+                calendar_events.append(["timed", event.get("summary", "No Title")])
+
+            # If the last event is reached, return the function back to main.py
+            if i == len(events) - 1:
+                return calendar_events

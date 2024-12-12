@@ -94,14 +94,15 @@ def get_next_24hr_events(service):
                 "dateTime", event.get("end", {}).get("date", "No End Time")
             )
             summary = event.get("summary", "No Title")
+            location = event.get("location", "No Location")
 
             # Assess whether the event type is all day or timed and save the calendar data as needed.
             if "dateTime" in start:
                 calendar_events.append(
-                    ["all_day", event.get("summary", "No Title"), start, end]
+                    ["all_day", event.get("summary", "No Title"), start, end, location]
                 )
             else:
-                calendar_events.append(["timed", event.get("summary", "No Title")])
+                calendar_events.append(["timed", event.get("summary", "No Title"), start, end, location])
 
             # If the last event is reached, return the function back to main.py
             if i == len(events) - 1:

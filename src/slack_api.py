@@ -49,66 +49,87 @@ def list_channels(token):
 
 def process_event(slack_token, app_token, channel_id):
     """Function to handle the bot event subscriptions sent by the Slack API."""
-    # Initialize SocketModeClient with the app-level token
+    # Initialize SocketModeClient with the app-level token.
     client = SocketModeClient(
         app_token=app_token, web_client=WebClient(token=slack_token)
     )
 
-    # Initialize latest_timestamp with the current time
+    # Initialize latest_timestamp with the current time.
     latest_timestamp = time.time()
 
+    # Set to track processed event IDs.
+    processed_event_ids = set()
 
     def handle_events(client: SocketModeClient, request: SocketModeRequest):
         """Function to handle the incoming events from the Slack API and invoke the correct outgoing responses."""
         nonlocal latest_timestamp
+
+        # Initialize the WebClient to obtain the id of the bot.
+        web_client = WebClient(token=os.getenv("SLACK_BOT_TOKEN"))
+
+        # Get the bot user ID to ignore messages from the bot itself
+        bot_user_id = web_client.auth_test()["user_id"]
+
         if request.type == "events_api":
             event = request.payload["event"]
+
+            # Extract the event timestamp
+            event_ts = event.get("event_ts")
             print(f"Received event: {event}")
-            
-            # Activates when the user directly messages or mentions the bot.
-            if event.get("type") == "app_mention":
-                event_ts = float(event.get("ts"))
-                if event_ts > latest_timestamp:
-                    latest_timestamp = event_ts
-                    user = event.get("user")
-                    channel = event.get("channel")
-                    text = f"Hello <@{user}>! How can I help you today? :)"
-            # Activates if an indirect message is sent in Slack.
-            elif event.get("type") == "message" and "subtype" not in event:
-                event_ts = float(event.get("ts"))
-                if event_ts > latest_timestamp:
-                    latest_timestamp = event_ts
 
-            # Activates if there's a reaction added.
-            elif event.get("type") == "reaction_added":
-                event_ts = float(event.get("ts"))
-                if event_ts > latest_timestamp:
-                    latest_timestamp = event_ts
-                    user = event.get("user")
-                    reaction = event.get("reaction")
-                    item = event.get("item")
-                    logging.debug(
-                        f"Handling reaction added by user {user}: {reaction} to item {item}"
-                    )
-                    handle_reaction_added(user, reaction, item)
+            # Check if the event has already been processed
+            if event_ts in processed_event_ids:
+                logging.debug(f"Event {event_ts} already processed.")
+                return
 
-            # Activates if a reaction is removed.
-            elif event.get("type") == "reaction_removed":
-                event_ts = float(event.get("ts"))
-                if event_ts > latest_timestamp:
-                    latest_timestamp = event_ts
-                    user = event.get("user")
-                    reaction = event.get("reaction")
-                    item = event.get("item")
-                    logging.debug(
-                        f"Handling reaction removed by user {user}: {reaction} from item {item}"
-                    )
-                    handle_reaction_removed(user, reaction, item)
-                    # Send a message back to the channel
+            # Check if the event is new
+            if float(event_ts) <= latest_timestamp:
+                logging.debug(f"Event {event_ts} is older than the latest timestamp.")
+                return
+
+            # Mark the event as processed
+            processed_event_ids.add(event_ts)
+            latest_timestamp = float(event_ts)
+
+            # Handle different types of events
+            if event.get("type") == "app_mention" and event.get("user") != bot_user_id:
+                user = event.get("user")
+                channel = event.get("channel")
+                text = f"Hello <@{user}>! How can I help you today? :)"
+                try:
                     client.web_client.chat_postMessage(channel=channel, text=text)
+                except SlackApiError as e:
+                    logging.error(f"Error sending message: {e.response['error']}")
+
+            elif event.get("type") == "message" and "subtype" not in event and event.get("user") != bot_user_id:
+                user = event.get("user")
+                channel = event.get("channel")
+                text = event.get("text")
+                handle_message(user, text, channel)
+
+            elif event.get("type") == "reaction_added" and event.get("user") != bot_user_id:
+                user = event.get("user")
+                reaction = event.get("reaction")
+                item = event.get("item")
+                channel = item.get("channel")
+                logging.debug(
+                    f"Handling reaction added by user {user}: {reaction} to item {item}"
+                )
+                handle_reaction_added(user, reaction, item, channel)
+
+            elif event.get("type") == "reaction_removed" and event.get("user") != bot_user_id:
+                user = event.get("user")
+                reaction = event.get("reaction")
+                item = event.get("item")
+                channel = item.get("channel")
+                logging.debug(
+                    f"Handling reaction removed by user {user}: {reaction} from item {item}"
+                )
+                handle_reaction_removed(user, reaction, item, channel)
 
     # Add the event listener to the client.
-    client.socket_mode_request_listeners.append(handle_events)
+    if handle_events not in client.socket_mode_request_listeners:
+        client.socket_mode_request_listeners.append(handle_events)
 
     # Establish a connection to the Slack API.
     client.connect()
@@ -117,16 +138,12 @@ def process_event(slack_token, app_token, channel_id):
     while True:
         time.sleep(1)
 
-    # Check if the event is a message from the user.
-
 
 def handle_message(user, text, channel):
     """Function to handle incoming messages to the bot."""
     slack_token = os.getenv("SLACK_BOT_TOKEN")
+    logging.info(f"User {user} sent a message: {text}")
     response_text = f"Hello <@{user}>, you said: {text}"
-    logging.debug(
-        f"Sending response to user {user} in channel {channel}: {response_text}"
-    )
     send_slack_message(slack_token, channel, response_text)
 
 
@@ -137,14 +154,26 @@ def handle_app_mention(user, text, channel):
     logging.debug(
         f"Sending response to user {user} in channel {channel}: {response_text}"
     )
+
+    # Send a message back to the channel.
     send_slack_message(slack_token, channel, response_text)
 
 
-def handle_reaction_added(user, reaction, item):
+def handle_reaction_added(user, reaction, item, channel):
     """Function to handle reactions added to messages."""
+    slack_token = os.getenv("SLACK_BOT_TOKEN")
     logging.info(f"User {user} added reaction {reaction} to item {item}")
+    response_text = f"Hello <@{user}>, you added a reaction: {reaction}"
+
+    # Send a message back to the channel.
+    send_slack_message(slack_token, channel, response_text)
 
 
-def handle_reaction_removed(user, reaction, item):
+def handle_reaction_removed(user, reaction, item, channel):
     """Function to handle reactions removed from messages."""
+    slack_token = os.getenv("SLACK_BOT_TOKEN")
     logging.info(f"User {user} removed reaction {reaction} from item {item}")
+    response_text = f"Hello <@{user}>, you removed a reaction: {reaction}"
+
+    # Send a message back to the channel.
+    send_slack_message(slack_token, channel, response_text)

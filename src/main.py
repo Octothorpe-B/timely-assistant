@@ -1,5 +1,11 @@
 """
 Main program file to manage the running of Timely.
+
+Note: If you get this error: 
+
+google.auth.exceptions.RefreshError: ('invalid_grant: Token has been expired or revoked ...)
+
+Delete the token.json file in the src/data folder and re-run the program to authenticate your project.
 """
 
 import slack_api

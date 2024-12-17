@@ -2,8 +2,18 @@
 Main program file to manage the running of Timely.
 """
 
+import slack_api
 import google_calendar
-import events
+import json
+import time
+from slack_sdk import WebClient
+from slack_sdk.errors import SlackApiError
+from slack_sdk.socket_mode import SocketModeClient
+from slack_sdk.socket_mode.request import SocketModeRequest
+from slack_sdk.socket_mode.response import SocketModeResponse
+from flask import Flask, request, jsonify
+import os
+import logging
 
 
 def obtain_calendar():
@@ -22,9 +32,8 @@ def obtain_calendar():
 
 def save_calendar_events(calendar_events):
     """Function to save the calendar events to a json file."""
-        with open("src/data/calendar.json", "w") as calendar:
+    with open("src/data/calendar.json", "w") as calendar:
         json.dump(calendar_events, calendar)
-
 
 
 if __name__ == "__main__":
@@ -35,8 +44,25 @@ if __name__ == "__main__":
     # Save the obtained calendar events to a json file for later use.
     save_calendar_events(calendar_events)
 
-    # 2. TODO: Implement code to convert the home address and destination address into latitude and longitude.
+    # Connect to the Slack API to send the user chats and notifications.
+    slack_token, app_token, channel_id = slack_api.configure_slack_client()
 
-    # 3. TODO: Implement code to calculate the travel time to the destination.
+    print(f"Using Slack Token: {slack_token}")
+    print(f"Using Channel ID: {channel_id}")
 
-    # 4. TODO: Implement logic to notify the user when to best start getting ready and when to leave.
+    output = slack_api.list_channels(slack_token)
+    print(f"List Channels: {output}")
+    # Test message to send to the user.
+    message = "Hello, this is a test message from Timely!"
+
+    # Send the test message to the user.
+    # slack_api.send_slack_message(slack_token, channel_id, message)
+
+    # Run the flask app to listen for events from the Slack API.
+    slack_api.process_event(slack_token, app_token, channel_id)
+
+    # TODO: Implement code to convert the home address and destination address into latitude and longitude.
+
+    # TODO: Implement code to calculate the travel time to the destination.
+
+    # TODO: Implement logic to notify the user when to best start getting ready and when to leave.

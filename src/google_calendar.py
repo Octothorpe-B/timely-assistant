@@ -102,7 +102,9 @@ def get_next_24hr_events(service):
                     ["all_day", event.get("summary", "No Title"), start, end, location]
                 )
             else:
-                calendar_events.append(["timed", event.get("summary", "No Title"), start, end, location])
+                calendar_events.append(
+                    ["timed", event.get("summary", "No Title"), start, end, location]
+                )
 
             # If the last event is reached, return the function back to main.py
             if i == len(events) - 1:

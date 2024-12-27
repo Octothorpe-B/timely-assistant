@@ -22,25 +22,36 @@ def main():
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
         model="phi3:3.8b",
-        temperature=0.35,
-        max_tokens=150,  # Maximum number of tokens in the generated response
+        temperature= 0,
         top_p=0.9,  # Top-p (nucleus) sampling
-        frequency_penalty=0.5,  # Penalize new tokens based on their existing frequency
-        presence_penalty=0.5,  # Penalize new tokens based on whether they appear in the text so far
+        frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
+        presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
         stream=True,  # Enable streaming of the response
+        format="json",  # Specify the Output format
+        max_tokens=50
     )
+
+    # Define the different prompts used for running the model.
+    
+    # Pre answer prompt template for determining how to answer the question and what actions to take on behalf of the user.
+    f = open("src/prompt-templates/classifier-prompt.txt", "r")
+    classification_prompt_template = f.read()
+
+    # Standard chatting model template for the assistant.
+    default_model_prompt_template = "<|system|>\n <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>"
+
 
     # Define a prompt template with the new structure
     prompt = PromptTemplate(
         input_variables=["question"],
-        template="<|system|>\nYou are a helpful assistant. Your answers stick closely to what the user requests for you, and you do not deviate from the key elements of the request. If you do not know the answer for something please do not take a guess and just move on. <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>",
+        template= classification_prompt_template
     )
 
     # Create a chain by combining the prompt and the model
     chain = prompt | chat_model
 
     # Define the question
-    question = "Please give step by step instructions on how I can include book writing into my daily routine, including on how to motivate myself if I don't feel like it. You are helping the user which struggles with breaking down large tasks and needs help from technology to help them know how to perform tasks step by step. Please number the steps and provide clear instructions. While you are providing all of the steps please be concise and clear in your instructions. The instructions should be as brief as possible an not exceeding two sentences per step."
+    question = "Hey timely can you remind me to leave for my appointment at the time I need to to get there 15 minutes before it starts?"
 
     # Start the diagnostic experiments' timing.
     start_time = time.time()

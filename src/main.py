@@ -58,11 +58,6 @@ if __name__ == "__main__":
 
     output = slack_api.list_channels(slack_token)
     print(f"List Channels: {output}")
-    # Test message to send to the user.
-    message = "Hello, this is a test message from Timely!"
-
-    # Send the test message to the user.
-    # slack_api.send_slack_message(slack_token, channel_id, message)
 
     # Run the flask app to listen for events from the Slack API.
     slack_api.process_event(slack_token, app_token, channel_id)

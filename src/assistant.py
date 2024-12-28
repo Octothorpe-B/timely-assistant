@@ -3,6 +3,30 @@
 from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
 import time
+from operator import itemgetter
+from typing import List
+from langchain_core.chat_history import BaseChatMessageHistory
+from langchain_core.documents import Document
+from langchain_core.messages import BaseMessage, AIMessage
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from pydantic import BaseModel, Field
+from langchain_core.runnables import (
+    RunnableLambda,
+    ConfigurableFieldSpec,
+    RunnablePassthrough,
+)
+from langchain_core.runnables.history import RunnableWithMessageHistory
+
+# global variable to store the message history.
+store = {}
+
+def get_session_history(
+    user_id: str, conversation_id: str
+) -> BaseChatMessageHistory:
+    if (user_id, conversation_id) not in store:
+        store[(user_id, conversation_id)] = InMemoryHistory()
+    return store[(user_id, conversation_id)]
+
 
 
 def calculate_model_diagnostics(start_time, end_time, total_tokens):
@@ -27,8 +51,9 @@ def main():
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
         stream=True,  # Enable streaming of the response
-        format="json",  # Specify the Output format
         max_tokens=50
+        # format="json",  # Specify the Output format
+
     )
 
     # Define the different prompts used for running the model.
@@ -37,41 +62,62 @@ def main():
     f = open("src/prompt-templates/classifier-prompt.txt", "r")
     classification_prompt_template = f.read()
 
+    # Prompt template for handling the model's conversational questions.
+    f = open("src/prompt-templates/conversation-prompt.txt", "r")
+    conversation_prompt_template = f.read()
+
     # Standard chatting model template for the assistant.
     default_model_prompt_template = "<|system|>\n <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>"
 
 
     # Define a prompt template with the new structure
     prompt = PromptTemplate(
-        input_variables=["question"],
-        template= classification_prompt_template
+        input_variables = ["question"],
+        template = conversation_prompt_template,
+        conversation_history = True,
+        validate_template = True
     )
 
     # Create a chain by combining the prompt and the model
     chain = prompt | chat_model
 
-    # Define the question
-    question = "Hey timely can you remind me to leave for my appointment at the time I need to to get there 15 minutes before it starts?"
+    # Create the chain with message history.
 
-    # Start the diagnostic experiments' timing.
-    start_time = time.time()
+    chain_with_history = RunnableWithMessageHistory(
+        chain,
+        # Uses the get_by_session_id function defined in the example
+        # above.
+        get_by_session_id,
+        input_messages_key="question",
+        history_messages_key="history",
+    )
 
-    # Run the chain with the question using invoke and stream the response
-    total_tokens = 0
-    response = ""
-    # Print out a blank line to separate the lines in the terminal.
-    print()
 
-    for chunk in chain.stream({"question": question}):
-        response += chunk.content
-        print(chunk.content, end="", flush=True)
-        total_tokens += len(chunk.content.split())
+    while True:
 
-    # End the diagnostic experiments' timing.
-    end_time = time.time()
+        # Define the question
+        question = input(" > ")
 
-    # Calculate and output the model performance data.
-    calculate_model_diagnostics(start_time, end_time, total_tokens)
+        # Start the diagnostic experiments' timing.
+        start_time = time.time()
+
+        # Run the chain with the question using invoke and stream the response
+        total_tokens = 0
+        response = ""
+        # Print out a blank line to separate the lines in the terminal.
+        print()
+
+        for chunk in chain.stream({"question": question}):
+            response += chunk.content
+            # print(chunk.content, end="", flush=True)
+            total_tokens += len(chunk.content.split())
+
+        print(f"Timely: {response}")
+        # End the diagnostic experiments' timing.
+        end_time = time.time()
+
+        # Calculate and output the model performance data.
+        calculate_model_diagnostics(start_time, end_time, total_tokens)
 
 
 if __name__ == "__main__":

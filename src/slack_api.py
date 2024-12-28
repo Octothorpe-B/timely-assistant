@@ -101,13 +101,20 @@ def process_event(slack_token, app_token, channel_id):
                 except SlackApiError as e:
                     logging.error(f"Error sending message: {e.response['error']}")
 
-            elif event.get("type") == "message" and "subtype" not in event and event.get("user") != bot_user_id:
+            elif (
+                event.get("type") == "message"
+                and "subtype" not in event
+                and event.get("user") != bot_user_id
+            ):
                 user = event.get("user")
                 channel = event.get("channel")
                 text = event.get("text")
                 handle_message(user, text, channel)
 
-            elif event.get("type") == "reaction_added" and event.get("user") != bot_user_id:
+            elif (
+                event.get("type") == "reaction_added"
+                and event.get("user") != bot_user_id
+            ):
                 user = event.get("user")
                 reaction = event.get("reaction")
                 item = event.get("item")
@@ -117,7 +124,10 @@ def process_event(slack_token, app_token, channel_id):
                 )
                 handle_reaction_added(user, reaction, item, channel)
 
-            elif event.get("type") == "reaction_removed" and event.get("user") != bot_user_id:
+            elif (
+                event.get("type") == "reaction_removed"
+                and event.get("user") != bot_user_id
+            ):
                 user = event.get("user")
                 reaction = event.get("reaction")
                 item = event.get("item")

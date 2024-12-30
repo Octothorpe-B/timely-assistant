@@ -67,15 +67,14 @@ def save_json_to_list(json_file):
         # Extract and store relevant values.
         # NOTE: In order to add new classifications you need to manually include them in in this extracted_values dictionary.
         extracted_values = {
-            "classification": response_json.get("classification"),
-            "sub_action": response_json.get("sub-action"),
-            "time": response_json.get("time"),
-            "sub-time": response_json.get("sub-time"),
-            "tone": response_json.get("tone")
+            "tone": response_json.get("tone"),
+            "complexity": response_json.get("complexity"),
         }
 
         # Format the extracted values as a string.
-        dict_string = ", ".join(f"{key}: {value}" for key, value in extracted_values.items())
+        dict_string = ", ".join(
+            f"{key}: {value}" for key, value in extracted_values.items()
+        )
 
         return dict_string
 
@@ -90,14 +89,14 @@ def initialize_classification_model():
 
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
-        model = "phi3:3.8b",
-        temperature = 0.0,
-        top_p = 0.9,  # Top-p (nucleus) sampling
-        frequency_penalty = 0.2,  # Penalize new tokens based on their existing frequency
-        presence_penalty = 0.2,  # Penalize new tokens based on whether they appear in the text so far
-        stream = True,  # Enable streaming of the response
-        max_tokens = 50,  # Limit the number of tokens generated
-        format = "json",  # Specify the output format
+        model="phi3:3.8b",
+        temperature=0.0,
+        top_p=0.9,  # Top-p (nucleus) sampling
+        frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
+        presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
+        stream=True,  # Enable streaming of the response
+        max_tokens=50,  # Limit the number of tokens generated
+        format="json",  # Specify the output format
     )
 
     # Define the different prompts used for running the model.
@@ -106,8 +105,7 @@ def initialize_classification_model():
 
     # Define a prompt template with the new structure.
     prompt = PromptTemplate(
-        input_variables=["question"],
-        template= classification_prompt_template
+        input_variables=["question"], template=classification_prompt_template
     )
 
     # Create a chain by combining the prompt and the model.
@@ -121,8 +119,8 @@ def initialize_conversational_model(classifier_values):
     """Function to initialize the model for conversational responses."""
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
-        model="phi3:3.8b",
-        temperature=0.1,
+        model="llama3.1:8b",
+        temperature=0.33,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
@@ -135,8 +133,10 @@ def initialize_conversational_model(classifier_values):
 
     # NOTE: Legacy model template for phi-3 3.8b
     # default_model_prompt_template = "<|system|>\n <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>"
-    print(classifier_values)
-    conversation_prompt_template = conversation_prompt_template + "\nThe following data are the different semantic classifications of the user's prompts. Please use this information when crafting your response.\n" + classifier_values
+    # print(classifier_values)
+    conversation_prompt_template = (
+        conversation_prompt_template + "\n" + str(classifier_values)
+    )
 
     # Define the prompt template with placeholders for history and question
     prompt = ChatPromptTemplate.from_messages(
@@ -181,7 +181,6 @@ def initialize_conversational_model(classifier_values):
 
 
 if __name__ == "__main__":
-
     # Initialize the classification model to determine the type of question.
     classification_chain = initialize_classification_model()
 
@@ -203,7 +202,7 @@ if __name__ == "__main__":
             # Run the chain with the question using invoke and stream the response
             for chunk in classification_chain.stream({"question": question}):
                 response += chunk.content
-                print(chunk.content, end="", flush=True)
+                # print(chunk.content, end="", flush=True)
                 total_tokens += len(chunk.content.split())
 
             classifier_values = save_json_to_list(response)

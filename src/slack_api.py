@@ -92,6 +92,7 @@ def process_event(slack_token, app_token, channel_id):
             latest_timestamp = float(event_ts)
 
             # Handle different types of events
+            # NOTE: The following code get's triggered when the bot is mentioned in a channel.
             if event.get("type") == "app_mention" and event.get("user") != bot_user_id:
                 user = event.get("user")
                 channel = event.get("channel")
@@ -100,7 +101,7 @@ def process_event(slack_token, app_token, channel_id):
                     client.web_client.chat_postMessage(channel=channel, text=text)
                 except SlackApiError as e:
                     logging.error(f"Error sending message: {e.response['error']}")
-
+            # NOTE: The following code get's triggered when a message is sent in a channel.
             elif (
                 event.get("type") == "message"
                 and "subtype" not in event
@@ -110,7 +111,7 @@ def process_event(slack_token, app_token, channel_id):
                 channel = event.get("channel")
                 text = event.get("text")
                 handle_message(user, text, channel)
-
+            # NOTE: The following code get's triggered when a reaction is added to a message.
             elif (
                 event.get("type") == "reaction_added"
                 and event.get("user") != bot_user_id
@@ -123,7 +124,7 @@ def process_event(slack_token, app_token, channel_id):
                     f"Handling reaction added by user {user}: {reaction} to item {item}"
                 )
                 handle_reaction_added(user, reaction, item, channel)
-
+            # NOTE: The following code get's triggered when a reaction is removed from a message.
             elif (
                 event.get("type") == "reaction_removed"
                 and event.get("user") != bot_user_id

@@ -175,14 +175,12 @@ def handle_message(user, question, channel):
     conversational_model = assistant.initialize_conversational_model(classifications)
 
     # Ask the AI assistant to answer the question.
-    response, memory, conversation_tokens = assistant.query_ai_assistant(
+    response, conversation_tokens = assistant.query_ai_assistant(
         classification_model, conversational_model, question
     )
 
     # End the diagnostic experiments' timing.
     end_time = time.time()
-
-    memory_storage = memory
 
     # Calculate and output the model performance data to the terminal.
     assistant.calculate_model_diagnostics(start_time, end_time, classifier_tokens + conversation_tokens)

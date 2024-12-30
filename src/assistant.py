@@ -208,22 +208,13 @@ def query_ai_assistant(classifications, conversational_model, question):
     response = ""
     total_tokens = 0
 
-    # Initialize the conversational model.
-    with_message_history = initialize_conversational_model(classifications)
-
-    for chunk in with_message_history.stream(
+    for chunk in conversational_model.stream(
         {"question": question, "history": ""},
         config={"configurable": {"user_id": "129", "conversation_id": "1"}},
     ):
         response += chunk.content
         # print(chunk.content, end="", flush=True)
         total_tokens += len(chunk.content.split())
-
-    # End the diagnostic experiments' timing.
-    end_time = time.time()
-
-    # Calculate and output the model performance data to the terminal.
-    calculate_model_diagnostics(start_time, end_time, total_tokens)
 
     # Return the response from the AI assistant.
     return response, total_tokens

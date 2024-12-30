@@ -197,17 +197,27 @@ def handle_app_mention(user, question, channel):
     # Setup and obtain the classification and conversational models.
     classification_model = assistant.initialize_classification_model()
 
+    # Start the diagnostic experiments' timing and initialize the analytics .
+    start_time = time.time()
+
     # Query the classifier to obtain the classifier values.
-    classification = assistant.query_classifier(classification_model, question)
+    classifications, classifier_tokens = assistant.query_classifier(classification_model, question)
 
     # Setup and obtain the conversational model.
-    conversational_model = assistant.initialize_conversational_model(classification)
+    conversational_model = assistant.initialize_conversational_model(classifications)
 
     # Ask the AI assistant to answer the question.
-    response = assistant.query_ai_assistant(
+    response, conversation_tokens = assistant.query_ai_assistant(
         classification_model, conversational_model, question
     )
 
+    # End the diagnostic experiments' timing.
+    end_time = time.time()
+
+    # Calculate and output the model performance data to the terminal.
+    assistant.calculate_model_diagnostics(start_time, end_time, classifier_tokens + conversation_tokens)
+
+    # Calculate the total tokens from the classifier and conversational model.
     send_slack_message(slack_token, channel, response)
 
 

@@ -10,11 +10,18 @@ from flask import Flask, request, jsonify
 import os
 import logging
 import time
+import assistant
+from globals import memory_storage  # Importing the global variable
+
 
 # Import the Flask library to create a web server.
 app = Flask(__name__)
 
 logging.basicConfig(level=logging.DEBUG)
+
+# NOTE: Global variable to store the message history.
+# For future development the store is where you would connect to the message history database.
+memory_storage = {}
 
 
 def configure_slack_client():
@@ -150,24 +157,60 @@ def process_event(slack_token, app_token, channel_id):
         time.sleep(1)
 
 
-def handle_message(user, text, channel):
+def handle_message(user, question, channel):
     """Function to handle incoming messages to the bot."""
+    # Obtain the slack token from the environment variables.
     slack_token = os.getenv("SLACK_BOT_TOKEN")
-    logging.info(f"User {user} sent a message: {text}")
-    response_text = f"Hello <@{user}>, you said: {text}"
-    send_slack_message(slack_token, channel, response_text)
 
+    # Setup and obtain the classification and conversational models.
+    classification_model = assistant.initialize_classification_model()
 
-def handle_app_mention(user, text, channel):
-    """Function to handle app mentions."""
-    slack_token = os.getenv("SLACK_BOT_TOKEN")
-    response_text = f"Hello <@{user}>, you mentioned me: {text}"
-    logging.debug(
-        f"Sending response to user {user} in channel {channel}: {response_text}"
+    # Start the diagnostic experiments' timing and initialize the analytics .
+    start_time = time.time()
+
+    # Query the classifier to obtain the classifier values.
+    classifications, classifier_tokens = assistant.query_classifier(classification_model, question)
+
+    # Setup and obtain the conversational model.
+    conversational_model = assistant.initialize_conversational_model(classifications)
+
+    # Ask the AI assistant to answer the question.
+    response, memory, conversation_tokens = assistant.query_ai_assistant(
+        classification_model, conversational_model, question
     )
 
-    # Send a message back to the channel.
-    send_slack_message(slack_token, channel, response_text)
+    # End the diagnostic experiments' timing.
+    end_time = time.time()
+
+    memory_storage = memory
+
+    # Calculate and output the model performance data to the terminal.
+    assistant.calculate_model_diagnostics(start_time, end_time, classifier_tokens + conversation_tokens)
+
+    # Calculate the total tokens from the classifier and conversational model.
+    send_slack_message(slack_token, channel, response)
+
+
+def handle_app_mention(user, question, channel):
+    """Function to handle app mentions."""
+    # Obtain the slack token from the environment variables.
+    slack_token = os.getenv("SLACK_BOT_TOKEN")
+
+    # Setup and obtain the classification and conversational models.
+    classification_model = assistant.initialize_classification_model()
+
+    # Query the classifier to obtain the classifier values.
+    classification = assistant.query_classifier(classification_model, question)
+
+    # Setup and obtain the conversational model.
+    conversational_model = assistant.initialize_conversational_model(classification)
+
+    # Ask the AI assistant to answer the question.
+    response = assistant.query_ai_assistant(
+        classification_model, conversational_model, question
+    )
+
+    send_slack_message(slack_token, channel, response)
 
 
 def handle_reaction_added(user, reaction, item, channel):

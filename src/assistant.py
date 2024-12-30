@@ -17,11 +17,12 @@ from langchain_core.runnables import (
     RunnablePassthrough,
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
+from globals import memory_storage  # Importing the global variable
 
 
 # NOTE: Global variable to store the message history.
 # For future development the store is where you would connect to the message history database.
-store = {}
+# store = {}
 
 
 class InMemoryHistory(BaseChatMessageHistory, BaseModel):
@@ -39,9 +40,9 @@ class InMemoryHistory(BaseChatMessageHistory, BaseModel):
 
 
 def get_session_history(user_id: str, conversation_id: str) -> BaseChatMessageHistory:
-    if (user_id, conversation_id) not in store:
-        store[(user_id, conversation_id)] = InMemoryHistory()
-    return store[(user_id, conversation_id)]
+    if (user_id, conversation_id) not in memory_storage:
+        memory_storage[(user_id, conversation_id)] = InMemoryHistory()
+    return memory_storage[(user_id, conversation_id)]
 
 
 def calculate_model_diagnostics(start_time, end_time, total_tokens):
@@ -57,7 +58,7 @@ def calculate_model_diagnostics(start_time, end_time, total_tokens):
     print(f"* Average tokens per second: {tokens_per_second:.2f} t/s")
 
 
-def save_json_to_list(json_file):
+def save_json_to_list(response):
     """Function to save the JSON data to a list."""
     # Parse the JSON response
     try:
@@ -120,7 +121,7 @@ def initialize_conversational_model(classifier_values):
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
         model="llama3.1:8b",
-        temperature=0.33,
+        temperature=0.5,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
@@ -178,6 +179,54 @@ def initialize_conversational_model(classifier_values):
 
     # Return the conversational AI model chain with message history.
     return with_message_history
+
+
+def query_classifier(classification_model, question):
+    """Function to query the AI assistant with a question."""
+    # Initialize the response variable to store the model's response and the tokens variable.
+    response = ""
+    total_tokens = 0
+
+    # Run the chain with the question using invoke and stream the response
+    for chunk in classification_model.stream({"question": question}):
+        response += chunk.content
+        # print(chunk.content, end="", flush=True)
+        total_tokens += len(chunk.content.split())
+
+    classifier_values = save_json_to_list(response)
+    
+    # Return the classifier values from the AI assistant.
+    return classifier_values, total_tokens
+
+
+def query_ai_assistant(classifications, conversational_model, question):
+    """Function to query the AI assistant with a question."""
+    # Print out a blank line to separate the lines in the terminal.
+    print()
+
+    # Initialize the response variable to store the model's response.
+    response = ""
+    total_tokens = 0
+
+    # Initialize the conversational model.
+    with_message_history = initialize_conversational_model(classifications)
+
+    for chunk in with_message_history.stream(
+        {"question": question, "history": ""},
+        config={"configurable": {"user_id": "129", "conversation_id": "1"}},
+    ):
+        response += chunk.content
+        # print(chunk.content, end="", flush=True)
+        total_tokens += len(chunk.content.split())
+
+    # End the diagnostic experiments' timing.
+    end_time = time.time()
+
+    # Calculate and output the model performance data to the terminal.
+    calculate_model_diagnostics(start_time, end_time, total_tokens)
+
+    # Return the response from the AI assistant.
+    return response, total_tokens
 
 
 if __name__ == "__main__":

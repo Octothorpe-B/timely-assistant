@@ -14,10 +14,10 @@ SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 def obtain_calendar():
     """Function to get the user's calendar to obtain their events and their locations."""
     # Initialize connection with Google Calendar API and return the service object that connects the program to the API.
-    service = google_calendar.initialize_connection()
+    service = initialize_connection()
 
     # Initialize the connection with the Google Calendar API.
-    calendar_events = google_calendar.get_next_24hr_events(service)
+    calendar_events = get_next_24hr_events(service)
 
     # Output the calendar events for the next 24 hours to the terminal.
     # print(calendar_events)

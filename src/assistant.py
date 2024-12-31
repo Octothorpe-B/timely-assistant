@@ -21,11 +21,6 @@ from globals import memory_storage  # Importing the global variable
 import actions
 
 
-# NOTE: Global variable to store the message history.
-# For future development the store is where you would connect to the message history database.
-# store = {}
-
-
 class InMemoryHistory(BaseChatMessageHistory, BaseModel):
     """In memory implementation of chat message history."""
 
@@ -195,7 +190,7 @@ def query_classifier(classification_model, question):
         total_tokens += len(chunk.content.split())
 
     classifier_values = save_json_to_list(response)
-    
+
     # Return the classifier values from the AI assistant.
     return classifier_values, total_tokens
 
@@ -219,6 +214,3 @@ def query_ai_assistant(classifications, conversational_model, question):
 
     # Return the response from the AI assistant.
     return response, total_tokens
-
-
-

@@ -1,8 +1,9 @@
 """File to handle the execution of all of the AI assistant's actions."""
 
+
 class BaseAction:
     """Base class to handle all of the AI assistant's actions."""
-    
+
     def __init__(self, classifications):
         """Initialize the action with the classifications."""
         self.classifications = classifications
@@ -14,6 +15,7 @@ class BaseAction:
 
 class CalendarAction(BaseAction):
     """Class to handle the calendar actions for the AI assistant."""
+
     def execute(self):
         """Execute the calendar action based on the sub-action."""
         if "add" in self.classifications["sub-action"]:
@@ -41,8 +43,10 @@ class CalendarAction(BaseAction):
         """Get information about a calendar event."""
         print("Getting calendar event info")
 
+
 class ReminderAction(BaseAction):
     """Class to handle the reminders actions for the AI assistant."""
+
     def execute(self):
         """Execute the reminder action based on the sub-action."""
         if "add" in self.classifications["sub-action"]:
@@ -70,8 +74,10 @@ class ReminderAction(BaseAction):
         """Get information about a reminder."""
         print("Getting reminder info")
 
+
 class ConversationAction(BaseAction):
     """Class to handle the conversation actions for the AI assistant."""
+
     def execute(self):
         """Execute the conversation action based on the sub-action."""
         if "answer" in self.classifications["sub-action"]:
@@ -92,6 +98,7 @@ class ConversationAction(BaseAction):
     def respond(self):
         """Respond to a message."""
         print("Responding")
+
 
 class OtherAction(BaseAction):
     def execute(self):
@@ -117,4 +124,3 @@ if __name__ == "__main__":
     classifications = {"classification": "reminders", "sub-action": "answer"}
     action = action_factory(classifications)
     action.execute()
-

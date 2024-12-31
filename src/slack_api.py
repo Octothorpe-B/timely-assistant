@@ -11,6 +11,7 @@ import os
 import logging
 import time
 import assistant
+import actions
 from globals import memory_storage  # Importing the global variable
 
 
@@ -169,7 +170,9 @@ def handle_message(user, question, channel):
     start_time = time.time()
 
     # Query the classifier to obtain the classifier values.
-    classifications, classifier_tokens = assistant.query_classifier(classification_model, question)
+    classifications, classifier_tokens = assistant.query_classifier(
+        classification_model, question
+    )
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(classifications)
@@ -185,7 +188,9 @@ def handle_message(user, question, channel):
     end_time = time.time()
 
     # Calculate and output the model performance data to the terminal.
-    assistant.calculate_model_diagnostics(start_time, end_time, classifier_tokens + conversation_tokens)
+    assistant.calculate_model_diagnostics(
+        start_time, end_time, classifier_tokens + conversation_tokens
+    )
 
     # Calculate the total tokens from the classifier and conversational model.
     send_slack_message(slack_token, channel, response)
@@ -203,7 +208,9 @@ def handle_app_mention(user, question, channel):
     start_time = time.time()
 
     # Query the classifier to obtain the classifier values.
-    classifications, classifier_tokens = assistant.query_classifier(classification_model, question)
+    classifications, classifier_tokens = assistant.query_classifier(
+        classification_model, question
+    )
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(classifications)
@@ -217,7 +224,9 @@ def handle_app_mention(user, question, channel):
     end_time = time.time()
 
     # Calculate and output the model performance data to the terminal.
-    assistant.calculate_model_diagnostics(start_time, end_time, classifier_tokens + conversation_tokens)
+    assistant.calculate_model_diagnostics(
+        start_time, end_time, classifier_tokens + conversation_tokens
+    )
 
     # Calculate the total tokens from the classifier and conversational model.
     send_slack_message(slack_token, channel, response)

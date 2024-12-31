@@ -174,10 +174,13 @@ def handle_message(user, question, channel):
         classification_model, question
     )
 
-    print(type(classifications))
+    
     # TODO: Implement the code to handle the user's question and take the desired action.
     action = actions.action_factory(classifications)
     action_result = action.execute()
+
+    print("action_result type:", type(action_result))
+    print("action_result: ", action_result)
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(

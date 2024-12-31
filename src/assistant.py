@@ -131,13 +131,11 @@ def initialize_conversational_model(classifier_values, action_result):
     # Convert the classifier values dictionary to a list of strings
     classifier_values_list = [f"{value}" for key, value in classifier_values.items()]
 
-    # Debugging print statements.
-    # print(classifier_values_list)
-    # print(classifier_values_list[0])
-    # print(classifier_values_list[1])
+    # Join the list into a single string
+    classifier_values_str = ", ".join(classifier_values_list)
 
-    # Determine if an action has taken place before.
-    if len(action_result) in None:
+    # Ensure action_result is not None
+    if action_result is None:
         action_result = "null"
 
     # Define the prompt injection for informing the model of what action has taken place.

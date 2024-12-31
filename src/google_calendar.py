@@ -6,6 +6,8 @@ from google.oauth2.credentials import Credentials
 from google_auth_oauthlib.flow import InstalledAppFlow
 from googleapiclient.discovery import build
 from googleapiclient.errors import HttpError
+from datetime import datetime
+import json
 
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
@@ -71,12 +73,12 @@ def get_next_24hr_events(service):
 
     while True:
         # Obtain the current day events at the start of the day (0th hour) and the end of the day right before the 24th hour.
-        now = datetime.datetime.utcnow()
+        now = datetime.utcnow()
         start_of_day = (
-            datetime.datetime(now.year, now.month, now.day, 0, 0, 0).isoformat() + "Z"
+            datetime(now.year, now.month, now.day, 0, 0, 0).isoformat() + "Z"
         )
         end_of_day = (
-            datetime.datetime(now.year, now.month, now.day, 23, 59, 59).isoformat()
+            datetime(now.year, now.month, now.day, 23, 59, 59).isoformat()
             + "Z"
         )
 
@@ -113,17 +115,27 @@ def get_next_24hr_events(service):
             end = event.get("end", {}).get(
                 "dateTime", event.get("end", {}).get("date", "No End Time")
             )
+
+            # Convert the event times to 12-hour format with AM/PM.
+            start_time_dt = datetime.fromisoformat(start)
+            end_time_dt = datetime.fromisoformat(end)
+            start_time_formatted = start_time_dt.strftime("%I:%M %p")
+            end_time_formatted = end_time_dt.strftime("%I:%M %p")
+
+
             summary = event.get("summary", "No Title")
             location = event.get("location", "No Location")
 
             # Assess whether the event type is all day or timed and save the calendar data as needed.
+            # This code segment triggers if the event is an all-day event.
             if "dateTime" in start:
                 calendar_events.append(
                     ["all_day", event.get("summary", "No Title"), start, end, location]
                 )
+            # This code segment triggers if the event is a timed event.
             else:
                 calendar_events.append(
-                    ["timed", event.get("summary", "No Title"), start, end, location]
+                    ["timed", event.get("summary", "No Title"), start_time_formatted, end_time_formatted, location]
                 )
 
             # If the last event is reached, return the function back to main.py

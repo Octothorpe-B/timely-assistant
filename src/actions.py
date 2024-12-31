@@ -26,13 +26,13 @@ class CalendarAction(BaseAction):
     def execute(self):
         """Execute the calendar action based on the sub-action."""
         if "add" in self.classifications["sub-action"]:
-            self.add_event()
+            return self.add_event()
         elif "update" in self.classifications["sub-action"]:
-            self.update_event()
+            return self.update_event()
         elif "delete" in self.classifications["sub-action"]:
-            self.delete_event()
+            return self.delete_event()
         elif "get-info" in self.classifications["sub-action"]:
-            self.get_event_info()
+            return self.get_event_info()
 
     def add_event(self):
         """Add a calendar event."""
@@ -64,8 +64,10 @@ class CalendarAction(BaseAction):
         calendar_data_string = json.dumps(calendar_data)
 
         calendar_data_string = (
-            "This is the user's calendar for today. " + calendar_data_string
+            "This is the user's calendar for today. When completing your answer please format using a numbered list for the calendar events. " + str(calendar_data_string)
         )
+
+        print("calendar_data_string: ", calendar_data_string)
 
         return calendar_data_string
 
@@ -76,13 +78,13 @@ class ReminderAction(BaseAction):
     def execute(self):
         """Execute the reminder action based on the sub-action."""
         if "add" in self.classifications["sub-action"]:
-            self.add_reminder()
+            return self.add_reminder()
         elif "update" in self.classifications["sub-action"]:
-            self.update_reminder()
+            return self.update_reminder()
         elif "delete" in self.classifications["sub-action"]:
-            self.delete_reminder()
+            return self.delete_reminder()
         elif "get-info" in self.classifications["sub-action"]:
-            self.get_reminder_info()
+            return self.get_reminder_info()
 
     def add_reminder(self):
         """Add a reminder."""
@@ -107,11 +109,11 @@ class ConversationAction(BaseAction):
     def execute(self):
         """Execute the conversation action based on the sub-action."""
         if "answer" in self.classifications["sub-action"]:
-            self.answer_question()
+            return self.answer_question()
         elif "small-talk" in self.classifications["sub-action"]:
-            self.small_talk()
+            return self.small_talk()
         elif "respond" in self.classifications["sub-action"]:
-            self.respond()
+            return self.respond()
 
     def answer_question(self):
         """Answer a question."""

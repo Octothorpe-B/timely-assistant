@@ -64,16 +64,16 @@ def save_json_to_list(response):
         # Extract and store relevant values.
         # NOTE: In order to add new classifications you need to manually include them in in this extracted_values dictionary.
         extracted_values = {
+            "classification": response_json.get("classification"),
+            "sub-action": response_json.get("sub-action"),
+            "time": response_json.get("time"),
+            "sub-time": response_json.get("sub-time"),
             "tone": response_json.get("tone"),
             "complexity": response_json.get("complexity"),
         }
 
-        # Format the extracted values as a string.
-        dict_string = ", ".join(
-            f"{key}: {value}" for key, value in extracted_values.items()
-        )
-
-        return dict_string
+        # Return the extracted values from the JSON response.
+        return extracted_values
 
     except json.JSONDecodeError as e:
         print(f"\nError parsing JSON response: {e}")
@@ -112,7 +112,7 @@ def initialize_classification_model():
     return chain
 
 
-def initialize_conversational_model(classifier_values):
+def initialize_conversational_model(classifier_values, action_result):
     """Function to initialize the model for conversational responses."""
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
@@ -128,11 +128,29 @@ def initialize_conversational_model(classifier_values):
     f = open("src/prompt-templates/conversation-prompt.txt", "r")
     conversation_prompt_template = f.read()
 
+    # Convert the classifier values dictionary to a list of strings
+    classifier_values_list = [f"{value}" for key, value in classifier_values.items()]
+
+    # Debugging print statements.
+    # print(classifier_values_list)
+    # print(classifier_values_list[0])
+    # print(classifier_values_list[1])
+
+    # Determine if an action has taken place before.
+    if len(action_result) in None:
+        action_result = "null"
+
+    # Define the prompt injection for informing the model of what action has taken place.
+    action_prompt_injection = f"""
+    \nIf an action was taken place the following are the results of the action. It may or may not be relevant to answering the current question. If the action listed is `null` then no action was taken.
+    \n{str(action_result)} 
+    """
+
     # NOTE: Legacy model template for phi-3 3.8b
     # default_model_prompt_template = "<|system|>\n <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>"
-    # print(classifier_values)
+    print(classifier_values)
     conversation_prompt_template = (
-        conversation_prompt_template + "\n" + str(classifier_values)
+        conversation_prompt_template + "\n" + str(action_prompt_injection)
     )
 
     # Define the prompt template with placeholders for history and question
@@ -186,7 +204,7 @@ def query_classifier(classification_model, question):
     # Run the chain with the question using invoke and stream the response
     for chunk in classification_model.stream({"question": question}):
         response += chunk.content
-        # print(chunk.content, end="", flush=True)
+        print(chunk.content, end="", flush=True)
         total_tokens += len(chunk.content.split())
 
     classifier_values = save_json_to_list(response)

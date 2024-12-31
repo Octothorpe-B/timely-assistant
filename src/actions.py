@@ -1,5 +1,12 @@
 """File to handle the execution of all of the AI assistant's actions."""
 
+import json
+import google_calendar
+import assistant
+import navigation
+import reminders
+import slack_api
+
 
 class BaseAction:
     """Base class to handle all of the AI assistant's actions."""
@@ -42,6 +49,25 @@ class CalendarAction(BaseAction):
     def get_event_info(self):
         """Get information about a calendar event."""
         print("Getting calendar event info")
+
+        # Initialize the connection to the Google Calendar API.
+        service = google_calendar.initialize_connection()
+
+        # Get the next 24 hours of events from the Google Calendar API.
+        google_calendar.get_next_24hr_events(service)
+
+        # Open the calendar.json file which was just updated to have the latest events for today and read the data.
+        with open("src/data/calendar.json", "r") as calendar:
+            calendar_data = json.load(calendar)
+
+        # Convert the calendar data from JSON to a string.
+        calendar_data_string = json.dumps(calendar_data)
+
+        calendar_data_string = (
+            "This is the user's calendar for today. " + calendar_data_string
+        )
+
+        return calendar_data_string
 
 
 class ReminderAction(BaseAction):

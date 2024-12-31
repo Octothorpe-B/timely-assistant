@@ -18,7 +18,7 @@ from globals import memory_storage  # Importing the global variable
 # Import the Flask library to create a web server.
 app = Flask(__name__)
 
-logging.basicConfig(level=logging.DEBUG)
+# logging.basicConfig(level=logging.DEBUG)
 
 # NOTE: Global variable to store the message history.
 # For future development the store is where you would connect to the message history database.
@@ -174,10 +174,15 @@ def handle_message(user, question, channel):
         classification_model, question
     )
 
-    # Setup and obtain the conversational model.
-    conversational_model = assistant.initialize_conversational_model(classifications)
-
+    print(type(classifications))
     # TODO: Implement the code to handle the user's question and take the desired action.
+    action = actions.action_factory(classifications)
+    action_result = action.execute()
+
+    # Setup and obtain the conversational model.
+    conversational_model = assistant.initialize_conversational_model(
+        classifications, action_result
+    )
 
     # Ask the AI assistant to answer the question.
     response, conversation_tokens = assistant.query_ai_assistant(

@@ -174,6 +174,8 @@ def handle_message(user, question, channel):
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(classifications)
 
+    # TODO: Implement the code to handle the user's question and take the desired action.
+
     # Ask the AI assistant to answer the question.
     response, conversation_tokens = assistant.query_ai_assistant(
         classification_model, conversational_model, question

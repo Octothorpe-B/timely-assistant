@@ -18,6 +18,7 @@ from langchain_core.runnables import (
 )
 from langchain_core.runnables.history import RunnableWithMessageHistory
 from globals import memory_storage  # Importing the global variable
+import actions
 
 
 # NOTE: Global variable to store the message history.
@@ -220,51 +221,4 @@ def query_ai_assistant(classifications, conversational_model, question):
     return response, total_tokens
 
 
-if __name__ == "__main__":
-    # Initialize the classification model to determine the type of question.
-    classification_chain = initialize_classification_model()
 
-    while True:
-        # Define the question
-        question = input(" > ")
-
-        # If the user types "exit", then exit the program.
-        if str(question) == "exit" or str(question) == "quit":
-            break
-        else:
-            # Initialize the response variable to store the model's response.
-            response = ""
-
-            # Start the diagnostic experiments' timing and initialize the analytics .
-            start_time = time.time()
-            total_tokens = 0
-
-            # Run the chain with the question using invoke and stream the response
-            for chunk in classification_chain.stream({"question": question}):
-                response += chunk.content
-                # print(chunk.content, end="", flush=True)
-                total_tokens += len(chunk.content.split())
-
-            classifier_values = save_json_to_list(response)
-
-            # Initialize the conversational model.
-            with_message_history = initialize_conversational_model(classifier_values)
-
-            # Print out a blank line to separate the lines in the terminal.
-            print()
-
-            response = ""
-
-            for chunk in with_message_history.stream(
-                {"question": question, "history": ""},
-                config={"configurable": {"user_id": "129", "conversation_id": "1"}},
-            ):
-                response += chunk.content
-                print(chunk.content, end="", flush=True)
-                total_tokens += len(chunk.content.split())
-
-            # End the diagnostic experiments' timing.
-            end_time = time.time()
-
-            # Calculate and output the model performance data to the terminal.
-            calculate_model_diagnostics(start_time, end_time, total_tokens)

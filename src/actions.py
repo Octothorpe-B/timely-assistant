@@ -54,22 +54,33 @@ class CalendarAction(BaseAction):
         service = google_calendar.initialize_connection()
 
         # Get the next 24 hours of events from the Google Calendar API.
-        google_calendar.get_next_24hr_events(service)
+        calendar_data = google_calendar.get_next_24hr_events(service)
 
-        # Open the calendar.json file which was just updated to have the latest events for today and read the data.
-        with open("src/data/calendar.json", "r") as calendar:
-            calendar_data = json.load(calendar)
+        # Save the calendar events to a json file.
+        google_calendar.save_calendar_events(calendar_data)
 
-        # Convert the calendar data from JSON to a string.
-        calendar_data_string = json.dumps(calendar_data)
+        print("type: ", type(calendar_data))
 
-        calendar_data_string = (
-            "This is the user's calendar for today. When completing your answer please format using a numbered list for the calendar events. " + str(calendar_data_string)
+        # Convert the calendar_data to a string for the prompt.
+        calendar_data_string = "\n\n".join([
+            f"Event Type: {event[0]} | Event Title: {event[1]} | Start Time: {event[2]} | End Time: {event[3]} | Location: {event[4]}"
+            for event in calendar_data
+        ])
+
+        # Convert the classifier values dictionary to a list of strings
+        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+
+        # Load the calendar action prompt template.
+        with open("src/prompt-templates/calendar-action-prompt.txt", "r") as file:
+            prompt_template = file.read()
+
+        # Format the calendar prompt with the calendar data.
+        calendar_prompt = prompt_template.format(
+            classifier_data = classifier_values_list,
+            calendar_data = calendar_data_string
         )
 
-        print("calendar_data_string: ", calendar_data_string)
-
-        return calendar_data_string
+        return calendar_prompt
 
 
 class ReminderAction(BaseAction):
@@ -145,10 +156,3 @@ def action_factory(classifications):
         return OtherAction(classifications)
     else:
         raise ValueError("Unknown classification")
-
-
-# Example usage
-if __name__ == "__main__":
-    classifications = {"classification": "reminders", "sub-action": "answer"}
-    action = action_factory(classifications)
-    action.execute()

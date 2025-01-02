@@ -54,8 +54,8 @@ def calculate_model_diagnostics(start_time, end_time, total_tokens):
     print(f"* Average tokens per second: {tokens_per_second:.2f} t/s")
 
 
-def save_json_to_list(response):
-    """Function to save the JSON data to a list."""
+def save_json_to_dict(response):
+    """Function to save the JSON data to a dictionary."""
     # Parse the JSON response
     try:
         # Load the JSON data from the file.
@@ -97,64 +97,44 @@ def initialize_classification_model():
     )
 
     # Define the different prompts used for running the model.
-    f = open("src/prompt-templates/classifier-prompt.txt", "r")
-    classification_prompt_template = f.read()
+    with open("src/prompt-templates/classifier-prompt.txt", "r") as f:
+        classification_prompt_template = f.read()
 
-    # Define a prompt template with the new structure.
-    prompt = PromptTemplate(
+
+    classifier_prompt = PromptTemplate(
         input_variables=["question"], template=classification_prompt_template
     )
 
     # Create a chain by combining the prompt and the model.
-    chain = prompt | chat_model
+    classification_model_chain = classifier_prompt | chat_model
 
     # Return the classification AI model chain.
-    return chain
+    return classification_model_chain
 
 
-def initialize_conversational_model(classifier_values, action_result):
+def initialize_conversational_model(classifier_values, action_prompt):
     """Function to initialize the model for conversational responses."""
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
         model="llama3.1:8b",
-        temperature=0.5,
+        temperature=0,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
         stream=True,  # Enable streaming of the response
     )
 
-    # Prompt template for handling the model's conversational questions.
-    f = open("src/prompt-templates/conversation-prompt.txt", "r")
-    conversation_prompt_template = f.read()
-
-    # Convert the classifier values dictionary to a list of strings
-    classifier_values_list = [f"{value}" for key, value in classifier_values.items()]
-
     # Join the list into a single string
-    classifier_values_str = ", ".join(classifier_values_list)
+    classifier_values_str = ", ".join(classifier_values)
 
-    # Ensure action_result is not None
-    if action_result is None:
-        action_result = "null"
-
-    # Define the prompt injection for informing the model of what action has taken place.
-    action_prompt_injection = f"""
-    \nIf an action was taken place the following are the results of the action. It may or may not be relevant to answering the current question. If the action listed is `null` then no action was taken.
-    \n{str(action_result)} 
-    """
-
-    # NOTE: Legacy model template for phi-3 3.8b
-    # default_model_prompt_template = "<|system|>\n <|end|>\n<|user|>\nQuestion: {question}<|end|>\n<|assistant|>"
-    print(classifier_values)
-    conversation_prompt_template = (
-        conversation_prompt_template + "\n" + str(action_prompt_injection)
-    )
+    # Ensure action_prompt is not None
+    if action_prompt is None:
+        action_prompt = "null"
 
     # Define the prompt template with placeholders for history and question
     prompt = ChatPromptTemplate.from_messages(
         [
-            ("system", conversation_prompt_template),
+            ("system", action_prompt),
             MessagesPlaceholder(variable_name="history"),
             ("user", "Question: {question}"),
         ]
@@ -205,7 +185,7 @@ def query_classifier(classification_model, question):
         print(chunk.content, end="", flush=True)
         total_tokens += len(chunk.content.split())
 
-    classifier_values = save_json_to_list(response)
+    classifier_values = save_json_to_dict(response)
 
     # Return the classifier values from the AI assistant.
     return classifier_values, total_tokens

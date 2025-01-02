@@ -170,6 +170,9 @@ def handle_message(user, question, channel):
     start_time = time.time()
 
     # Query the classifier to obtain the classifier values.
+    # Variables description:
+    # classifications is a dictionary containing the classification values.
+    # classifier_tokens is the total number of tokens generated in the classifier model.
     classifications, classifier_tokens = assistant.query_classifier(
         classification_model, question
     )
@@ -177,14 +180,14 @@ def handle_message(user, question, channel):
     
     # TODO: Implement the code to handle the user's question and take the desired action.
     action = actions.action_factory(classifications)
-    action_result = action.execute()
+    action_prompt = action.execute()
 
-    print("action_result type:", type(action_result))
-    print("action_result: ", action_result)
+    # print("action_result type:", type(action_result))
+    print("action_result: ", action_prompt)
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(
-        classifications, action_result
+        classifications, action_prompt
     )
 
     # Ask the AI assistant to answer the question.

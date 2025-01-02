@@ -22,22 +22,22 @@ import os
 import logging
 
 
-if __name__ == "__main__":
-    # Obtain the current day's calendar events through the Google Cloud API.
-    # Calendar Events Map: [0] = Event Name, [1] = Event Start Time, [2] = Event End Time, [3] = Event Location
-    calendar_events = google_calendar.obtain_calendar()
-
-    # Save the obtained calendar events to a json file for later use.
-    google_calendar.save_calendar_events(calendar_events)
-
+def main():
+    """Main function to run the Timely program."""
     # Connect to the Slack API to send the user chats and notifications.
     slack_token, app_token, channel_id = slack_api.configure_slack_client()
 
-    # print(f"Using Slack Token: {slack_token}")
-    # print(f"Using Channel ID: {channel_id}")
-
     output = slack_api.list_channels(slack_token)
-    # print(f"List Channels: {output}")
 
     # Run the flask app to listen for events from the Slack API.
     slack_api.process_event(slack_token, app_token, channel_id)
+
+
+if __name__ == "__main__":
+    # Obtain the current day's calendar events through the Google Cloud API.
+    # Calendar Events Map: [0] = Event Name, [1] = Event Start Time, [2] = Event End Time, [3] = Event Location
+    # calendar_events = google_calendar.obtain_calendar()
+
+    # Save the obtained calendar events to a json file for later use.
+    # google_calendar.save_calendar_events(calendar_events)
+    main()

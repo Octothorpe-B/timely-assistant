@@ -128,15 +128,52 @@ class ConversationAction(BaseAction):
 
     def answer_question(self):
         """Answer a question."""
-        print("Answering question")
+        # Load the calendar action prompt template.
+        with open("src/prompt-templates/answer-conversation-prompt.txt", "r") as file:
+            prompt_template = file.read()
+
+        # Convert the classifier values dictionary to a list of strings
+        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+
+        # Format the calendar prompt with the calendar data.
+        answer_prompt = prompt_template.format(
+            classifier_data = classifier_values_list,
+        )
+
+        return answer_prompt
 
     def small_talk(self):
         """Engage in small talk."""
-        print("Small talk")
+        # Load the calendar action prompt template.
+        with open("src/prompt-templates/small-talk-conversation-prompt.txt", "r") as file:
+            prompt_template = file.read()
+
+        # Convert the classifier values dictionary to a list of strings
+        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+
+        # Format the calendar prompt with the calendar data.
+        small_talk_prompt = prompt_template.format(
+            classifier_data = classifier_values_list,
+        )
+
+        return small_talk_prompt
 
     def respond(self):
         """Respond to a message."""
-        print("Responding")
+        # Load the calendar action prompt template.
+        with open("src/prompt-templates/respond-conversation-prompt.txt", "r") as file:
+            prompt_template = file.read()
+
+        # Convert the classifier values dictionary to a list of strings
+        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+
+        # Format the calendar prompt with the calendar data.
+        respond_prompt = prompt_template.format(
+            classifier_data = classifier_values_list,
+        )
+
+        return respond_prompt
+
 
 
 class OtherAction(BaseAction):

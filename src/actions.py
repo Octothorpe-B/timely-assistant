@@ -125,6 +125,8 @@ class ConversationAction(BaseAction):
             return self.small_talk()
         elif "respond" in self.classifications["sub-action"]:
             return self.respond()
+        elif "null" in self.classifications["sub-action"]:
+            return self.respond()
 
     def answer_question(self):
         """Answer a question."""

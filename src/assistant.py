@@ -100,7 +100,6 @@ def initialize_classification_model():
     with open("src/prompt-templates/classifier-prompt.txt", "r") as f:
         classification_prompt_template = f.read()
 
-
     classifier_prompt = PromptTemplate(
         input_variables=["question"], template=classification_prompt_template
     )

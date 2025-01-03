@@ -22,9 +22,7 @@ def obtain_calendar():
     # Initialize the connection with the Google Calendar API.
     calendar_events = get_next_24hr_events(service)
 
-    # Output the calendar events for the next 24 hours to the terminal.
-    # print(calendar_events)
-
+    # Return the calendar events.
     return calendar_events
 
 
@@ -59,7 +57,7 @@ def initialize_connection():
             token.write(creds.to_json())
 
     try:
-        service = build("calendar", "v3", credentials=creds)
+        service = build("calendar", "v3", credentials = creds)
 
     except HttpError as error:
         print(f"An error occurred: {error}")
@@ -67,82 +65,136 @@ def initialize_connection():
     return service
 
 
+def get_time_zone_bounds(local_tz, lower_bound_time, upper_bound_time):
+    """
+    Obtain the time zone bounds for the current day.
+
+    This function calculates the start and end of the current day in the specified time zone.
+    It returns the start and end times in ISO 8601 format.
+
+    Parameters:
+    local_tz (pytz.timezone): The local time zone for which to calculate the bounds.
+    lower_bound_time: the starting time boundary for the user's request.
+    upper_bound_time: the ending time boundary for the user's request.
+
+    Returns:
+    tuple: A tuple containing the start and end of the day in ISO 8601 format.
+    """
+
+    # Get the current date and time in the specified time zone.
+    now = datetime.now(local_tz)
+    start_of_day_iso = local_tz.localize(
+        datetime(now.year, now.month, now.day, 0, 0, 0)
+    ).isoformat()
+    end_of_day_iso = local_tz.localize(
+        datetime(now.year, now.month, now.day, 23, 59, 59)
+    ).isoformat()
+
+    # Return the start and end of the day in ISO 8601 format.
+    return start_of_day_iso, end_of_day_iso
+
+
+def fetch_events(service, start_of_day_iso, end_of_day_iso):
+    """ 
+    Function to fetch the events for the current day from the Google Calendar API.
+    """
+
+    # Obtain the events for the current day.
+    events_result = (service.events()
+        .list(
+            calendarId="primary",
+            timeMin=start_of_day_iso,
+            timeMax=end_of_day_iso,
+            singleEvents=True,
+            orderBy="startTime",
+        )
+        .execute()
+    )
+
+    # Return the events for the current day.
+    return events_result
+
+
+def process_calendar_event(event, local_tz):
+    """Process and format a single event."""
+    # Get the start and end time of the calendar event.
+    start_time, end_time = get_event_times(event)
+    start_time_formatted, end_time_formatted = format_event_times(start_time, end_time, local_tz)
+    summary = event.get("summary", "No Title")
+    location = event.get("location", "No Location")
+
+    # Determine if the event is an all-day event or a timed event.
+    if is_all_day_event(start_time_formatted, end_time_formatted):
+        event_type = "all-day"
+    else:
+        event_type = "timed"
+
+    # Return the processed event data.
+    return [event_type, summary, start_time_formatted, end_time_formatted, location]
+
+
+def get_event_times(event):
+    """Get the start and end times of an event."""
+    start = event.get("start", {}).get("dateTime", event.get("start", {}).get("date", "No Start Time"))
+    end = event.get("end", {}).get("dateTime", event.get("end", {}).get("date", "No End Time"))
+    return start, end
+
+def format_event_times(start, end, local_tz):
+    """Format event times to 12-hour format with AM/PM."""
+    # Parse the start and end times to datetime objects.
+    try:
+        start_time_dt = datetime.fromisoformat(start)
+        end_time_dt = datetime.fromisoformat(end)
+    except ValueError:
+        print(f"Error parsing date: {start} or {end}")
+        return "Invalid Time", "Invalid Time"
+    
+    # Format the start and end times to 12-hour format with AM/PM.
+    start_time_formatted = start_time_dt.strftime("%I:%M %p")
+    end_time_formatted = end_time_dt.strftime("%I:%M %p")
+
+    # Return the formatted start and end times.
+    return start_time_formatted, end_time_formatted
+
+
+def is_all_day_event(start_time_formatted, end_time_formatted):
+    """Check if an event is an all-day event."""
+    if start_time_formatted == "12:00 AM" and end_time_formatted == "12:00 AM":
+        return True
+    else:
+        return False
+
+
 def get_next_24hr_events(service):
     """Function to obtain today's events stored in Google Calendar"""
-    page_token = None
-    calendar_events = []
+    try:
+        # Initialize an empty list for the calendar events.
+        calendar_events = []
 
-    # Define your local time zone
-    local_tz = pytz.timezone('America/New_York')  # Replace with your local time zone
+        # Define your local time zone
+        local_tz = pytz.timezone("America/New_York")  # Replace with your local time zone
 
-    while True:
         # Obtain the current day events at the start of the day (0th hour) and the end of the day right before the 24th hour.
-        now = datetime.now(local_tz)
-        start_of_day = local_tz.localize(datetime(now.year, now.month, now.day, 0, 0, 0)).isoformat()
-        end_of_day = local_tz.localize(datetime(now.year, now.month, now.day, 23, 59, 59)).isoformat()
-
-        print(start_of_day, " : ", end_of_day)
-
-        # Obtain the events for the current day.
-        events_result = (
-            service.events()
-            .list(
-                calendarId="primary",
-                timeMin=start_of_day,
-                timeMax=end_of_day,
-                singleEvents=True,
-                orderBy="startTime",
-            )
-            .execute()
-        )
+        start_of_day_iso, end_of_day_iso = get_time_zone_bounds(local_tz, 0, 1)
+        events_result = fetch_events(service, start_of_day_iso, end_of_day_iso)
 
         # Obtain the events from the events_result dictionary.
         events = events_result.get("items", [])
 
-        # If there are no events, print a message to the user.
+        # If there are no events, return an empty list.
         if not events:
-            print("No events found for today.")
-            return
+            return []
 
-        for i, event in enumerate(events):
-            # Get the start and end time of the calendar events.
-            start = event.get("start", {})
-            end = event.get("end", {})
+        for event in events:
+            formatted_event = process_calendar_event(event, local_tz)
+            calendar_events.append(formatted_event)
+            print(formatted_event)
 
-            # Obtain the start and summary of the i-th calendar event.
-            start = event.get("start", {}).get(
-                "dateTime", event.get("start", {}).get("date", "No Start Time")
-            )
-            end = event.get("end", {}).get(
-                "dateTime", event.get("end", {}).get("date", "No End Time")
-            )
-
-            # Convert the event times to 12-hour format with AM/PM.
-            start_time_dt = datetime.fromisoformat(start)
-            end_time_dt = datetime.fromisoformat(end)
-            start_time_formatted = start_time_dt.strftime("%I:%M %p")
-            end_time_formatted = end_time_dt.strftime("%I:%M %p")
-
-            print(start_time_formatted, " : ", end_time_formatted)
-
-            summary = event.get("summary", "No Title")
-            location = event.get("location", "No Location")
-
-            # Assess whether the event type is all day or timed and save the calendar data as needed.
-            # This code segment triggers if the event is an all-day event.
-            # This code segment triggers if the event is a timed event.
-            if str(start_time_formatted) == "12:00 AM" and str(end_time_formatted) == "12:00 AM":
-                calendar_events.append(
-                    ["all-day", event.get("summary", "No Title"), start_time_formatted, end_time_formatted, location]
-                )
-            else:
-                calendar_events.append(
-                    ["timed", event.get("summary", "No Title"), start_time_formatted, end_time_formatted, location]
-                )
-
-            print(calendar_events[i])
-
-            # If the last event is reached, return the function back to main.py
-            if i == len(events) - 1:
-                print("Events Obtained\n", calendar_events)
-                return calendar_events
+        return calendar_events
+           
+    except HttpError as error:
+        print(f"An error occurred: {error}")
+        return []
+    except Exception as e:
+        print(f"An unexpected error occurred: {e}")
+        return []

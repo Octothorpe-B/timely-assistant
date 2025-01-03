@@ -62,13 +62,17 @@ class CalendarAction(BaseAction):
         print("type: ", type(calendar_data))
 
         # Convert the calendar_data to a string for the prompt.
-        calendar_data_string = "\n\n".join([
-            f"Event Type: {event[0]} | Event Title: {event[1]} | Start Time: {event[2]} | End Time: {event[3]} | Location: {event[4]}"
-            for event in calendar_data
-        ])
+        calendar_data_string = "\n\n".join(
+            [
+                f"Event Type: {event[0]} | Event Title: {event[1]} | Start Time: {event[2]} | End Time: {event[3]} | Location: {event[4]}"
+                for event in calendar_data
+            ]
+        )
 
         # Convert the classifier values dictionary to a list of strings
-        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+        classifier_values_list = [
+            f"{value}" for key, value in self.classifications.items()
+        ]
 
         # Load the calendar action prompt template.
         with open("src/prompt-templates/calendar-action-prompt.txt", "r") as file:
@@ -76,8 +80,7 @@ class CalendarAction(BaseAction):
 
         # Format the calendar prompt with the calendar data.
         calendar_prompt = prompt_template.format(
-            classifier_data = classifier_values_list,
-            calendar_data = calendar_data_string
+            classifier_data=classifier_values_list, calendar_data=calendar_data_string
         )
 
         return calendar_prompt
@@ -135,11 +138,13 @@ class ConversationAction(BaseAction):
             prompt_template = file.read()
 
         # Convert the classifier values dictionary to a list of strings
-        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+        classifier_values_list = [
+            f"{value}" for key, value in self.classifications.items()
+        ]
 
         # Format the calendar prompt with the calendar data.
         answer_prompt = prompt_template.format(
-            classifier_data = classifier_values_list,
+            classifier_data=classifier_values_list,
         )
 
         return answer_prompt
@@ -147,15 +152,19 @@ class ConversationAction(BaseAction):
     def small_talk(self):
         """Engage in small talk."""
         # Load the calendar action prompt template.
-        with open("src/prompt-templates/small-talk-conversation-prompt.txt", "r") as file:
+        with open(
+            "src/prompt-templates/small-talk-conversation-prompt.txt", "r"
+        ) as file:
             prompt_template = file.read()
 
         # Convert the classifier values dictionary to a list of strings
-        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+        classifier_values_list = [
+            f"{value}" for key, value in self.classifications.items()
+        ]
 
         # Format the calendar prompt with the calendar data.
         small_talk_prompt = prompt_template.format(
-            classifier_data = classifier_values_list,
+            classifier_data=classifier_values_list,
         )
 
         return small_talk_prompt
@@ -167,15 +176,16 @@ class ConversationAction(BaseAction):
             prompt_template = file.read()
 
         # Convert the classifier values dictionary to a list of strings
-        classifier_values_list = [f"{value}" for key, value in self.classifications.items()]
+        classifier_values_list = [
+            f"{value}" for key, value in self.classifications.items()
+        ]
 
         # Format the calendar prompt with the calendar data.
         respond_prompt = prompt_template.format(
-            classifier_data = classifier_values_list,
+            classifier_data=classifier_values_list,
         )
 
         return respond_prompt
-
 
 
 class OtherAction(BaseAction):

@@ -177,7 +177,6 @@ def handle_message(user, question, channel):
         classification_model, question
     )
 
-    
     # TODO: Implement the code to handle the user's question and take the desired action.
     action = actions.action_factory(classifications)
     action_prompt = action.execute()

@@ -53,26 +53,30 @@ class CalendarAction(BaseAction):
         # Initialize the connection to the Google Calendar API.
         service = google_calendar.initialize_connection()
 
-        # Get the next 24 hours of events from the Google Calendar API.
-        calendar_data = google_calendar.get_next_24hr_events(service)
-
-        # Save the calendar events to a json file.
-        google_calendar.save_calendar_events(calendar_data)
-
-        print("type: ", type(calendar_data))
-
-        # Convert the calendar_data to a string for the prompt.
-        calendar_data_string = "\n\n".join(
-            [
-                f"Event Type: {event[0]} | Event Title: {event[1]} | Start Time: {event[2]} | End Time: {event[3]} | Location: {event[4]}"
-                for event in calendar_data
-            ]
-        )
-
         # Convert the classifier values dictionary to a list of strings
         classifier_values_list = [
             f"{value}" for key, value in self.classifications.items()
         ]
+
+        print("Classifier values list:", classifier_values_list)
+
+        # Get the next 24 hours of events from the Google Calendar API.
+        calendar_data = google_calendar.get_time_bounded_events(
+            service, classifier_values_list
+        )
+
+        # Save the calendar events to a json file.
+        google_calendar.save_calendar_events(calendar_data)
+
+        print("CALENDAR DATA LIST:", calendar_data)
+
+        # Convert the calendar_data to a string for the prompt.
+        calendar_data_string = "\n\n".join(
+            [
+                f"Event Type: {event[0]} | Event Title: {event[1]} | Start Time: {event[2]} | End Time: {event[3]} | Location: {event[4]} | Day of Event: {event[5]}"
+                for event in calendar_data
+            ]
+        )
 
         # Load the calendar action prompt template.
         with open("src/prompt-templates/calendar-action-prompt.txt", "r") as file:

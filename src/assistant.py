@@ -67,16 +67,17 @@ def save_json_to_dict(response):
             "classification": response_json.get("classification"),
             "sub-action": response_json.get("sub-action"),
             "time": response_json.get("time"),
-            "sub-time": response_json.get("sub-time"),
+            "time-direction": response_json.get("time-direction"),
             "tone": response_json.get("tone"),
             "complexity": response_json.get("complexity"),
         }
 
+        # print("\nExtracted values:", extracted_values)
         # Return the extracted values from the JSON response.
         return extracted_values
 
     except json.JSONDecodeError as e:
-        print(f"\nError parsing JSON response: {e}")
+        print(f"\nError parsing JSON response in assistant.py file in save_json_to_dict() function: {e}")
         return None
 
 

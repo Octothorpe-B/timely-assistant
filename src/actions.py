@@ -20,7 +20,7 @@ class BaseAction:
 
     def execute(self):
         """Execute the action."""
-        raise NotImplementedError("Subclasses should implement this method.")
+        raise NotImplementedError("Subclasses should implement this!")
 
 
 class CalendarAction(BaseAction):
@@ -36,6 +36,8 @@ class CalendarAction(BaseAction):
             return self.delete_event()
         elif "get-info" in self.classifications["sub-action"]:
             return self.get_event_info()
+        elif "null" in self.classifications["sub-action"]:
+            return self.respond()
 
     def add_event(self):
         """Add a calendar event."""
@@ -102,6 +104,10 @@ class CalendarAction(BaseAction):
 
         return calendar_prompt
 
+    def respond(self):
+        """Respond to a message."""
+        print("No specific action")
+
 
 class ReminderAction(BaseAction):
     """Class to handle the reminders actions for the AI assistant."""
@@ -116,6 +122,8 @@ class ReminderAction(BaseAction):
             return self.delete_reminder()
         elif "get-info" in self.classifications["sub-action"]:
             return self.get_reminder_info()
+        elif "null" in self.classifications["sub-action"]:
+            return self.respond()
 
     def add_reminder(self):
         """Add a reminder."""
@@ -132,6 +140,10 @@ class ReminderAction(BaseAction):
     def get_reminder_info(self):
         """Get information about a reminder."""
         print("Getting reminder info")
+
+    def respond(self):
+        """Respond to a message."""
+        print("No specific action")
 
 
 class ConversationAction(BaseAction):
@@ -170,7 +182,7 @@ class ConversationAction(BaseAction):
         """Engage in small talk."""
         # Load the calendar action prompt template.
         with open(
-            "src/prompt-templates/small-talk-conversation-prompt.txt", "r"
+            "src/prompt-templates/conversation-action-prompt.txt", "r"
         ) as file:
             prompt_template = file.read()
 
@@ -189,7 +201,7 @@ class ConversationAction(BaseAction):
     def respond(self):
         """Respond to a message."""
         # Load the calendar action prompt template.
-        with open("src/prompt-templates/respond-conversation-prompt.txt", "r") as file:
+        with open("src/prompt-templates/conversation-action-prompt.txt", "r") as file:
             prompt_template = file.read()
 
         # Convert the classifier values dictionary to a list of strings
@@ -212,13 +224,13 @@ class OtherAction(BaseAction):
 
 def action_factory(classifications, question):
     """Factory method to create action instances based on classifications."""
-    if "calendar" in classifications["classification"]:
+    if classifications["classification"] == "calendar":
         return CalendarAction(classifications, question)
-    elif "reminders" in classifications["classification"]:
+    elif classifications["classification"] == "reminders":
         return ReminderAction(classifications, question)
-    elif "conversation" in classifications["classification"]:
+    elif classifications["classification"] == "conversation":
         return ConversationAction(classifications, question)
-    elif "other" in classifications["classification"]:
+    elif classifications["classification"] == "other":
         return OtherAction(classifications, question)
     else:
         raise ValueError("Unknown classification")

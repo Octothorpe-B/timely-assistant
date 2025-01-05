@@ -117,6 +117,11 @@ class TestActions:
             action.execute()
             mock_get_event_info.assert_called_once()
 
+        with patch.object(CalendarAction, 'respond') as mock_respond:
+            action = CalendarAction({"sub-action": "null"}, "No specific action")
+            action.execute()
+            mock_respond.assert_called_once()
+
     def test_reminder_action_add_reminder(self):
         """Test the add_reminder method of ReminderAction."""
         action = ReminderAction({"sub-action": "add"}, "Add a reminder to call John")
@@ -167,6 +172,11 @@ class TestActions:
             action.execute()
             mock_get_reminder_info.assert_called_once()
 
+        with patch.object(ReminderAction, 'respond') as mock_respond:
+            action = ReminderAction({"sub-action": "null"}, "No specific action")
+            action.execute()
+            mock_respond.assert_called_once()
+
     def test_conversation_action_answer_question(self):
         """Test the answer_question method of ConversationAction."""
         action = ConversationAction({"sub-action": "answer"}, "What is AI?")
@@ -202,6 +212,11 @@ class TestActions:
 
         with patch.object(ConversationAction, 'respond') as mock_respond:
             action = ConversationAction({"sub-action": "respond"}, "Tell me a joke.")
+            action.execute()
+            mock_respond.assert_called_once()
+
+        with patch.object(ConversationAction, 'respond') as mock_respond:
+            action = ConversationAction({"sub-action": "null"}, "No specific action")
             action.execute()
             mock_respond.assert_called_once()
 

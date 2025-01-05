@@ -2,6 +2,8 @@
 
 Time management bot that calculates and lets you know when to get ready and leave for a place and arrive there on time.
 
+[![codecov](https://codecov.io/gh/Octothorpe-B/timely-assistant/graph/badge.svg?token=2YUXJFCAKZ)](https://codecov.io/gh/Octothorpe-B/timely-assistant)
+
 ## Table of Contents
 
 - [Overview](#overview)

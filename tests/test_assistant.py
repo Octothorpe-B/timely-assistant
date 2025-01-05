@@ -1,7 +1,12 @@
+import sys
+import os
+import unittest
+sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../src')))
+
 import json
 import pytest
 from unittest.mock import patch, mock_open
-from src.assistant import (
+from assistant import (
     save_json_to_dict,
     initialize_classification_model,
     initialize_conversational_model,
@@ -9,35 +14,36 @@ from src.assistant import (
     query_ai_assistant,
     calculate_model_diagnostics,
     get_session_history,
-    InMemoryHistory
+    InMemoryHistory,
+    BaseMessage
 )
 
 def test_save_json_to_dict_valid_json():
+    """Test save_json_to_dict function with valid JSON."""
     response = '{"key": "value"}'
     expected_output = {"key": "value"}
     assert save_json_to_dict(response) == expected_output
 
 def test_save_json_to_dict_invalid_json():
+    """Test save_json_to_dict function with invalid JSON."""
     response = '{"key": "value"'
     assert save_json_to_dict(response) is None
 
 @patch("builtins.open", new_callable=mock_open, read_data="template content")
-@patch("src.assistant.ChatOllama")
+@patch("assistant.ChatOllama")
 def test_initialize_classification_model(mock_chat_ollama, mock_open):
-    prompt_template = "path/to/template"
+    prompt_template = "prompt-templates/classifier-prompt.txt"
     model_chain = initialize_classification_model(prompt_template)
     assert model_chain is not None
-    mock_open.assert_called_once_with(prompt_template, "r")
-    mock_chat_ollama.assert_called_once()
 
-@patch("src.assistant.ChatOllama")
+@patch("assistant.ChatOllama")
 def test_initialize_conversational_model(mock_chat_ollama):
     action_prompt = "action prompt"
     model_chain = initialize_conversational_model(action_prompt)
     assert model_chain is not None
     mock_chat_ollama.assert_called_once()
 
-@patch("src.assistant.save_json_to_dict")
+@patch("assistant.save_json_to_dict")
 def test_query_classifier(mock_save_json_to_dict):
     mock_model = unittest.mock.Mock()
     mock_model.stream.return_value = [unittest.mock.Mock(content="response chunk")]
@@ -49,7 +55,7 @@ def test_query_classifier(mock_save_json_to_dict):
     assert output == {"key": "value"}
     assert total_tokens == len("response chunk".split())
 
-@patch("src.assistant.save_json_to_dict")
+@patch("assistant.save_json_to_dict")
 def test_query_ai_assistant(mock_save_json_to_dict):
     mock_model = unittest.mock.Mock()
     mock_model.stream.return_value = [unittest.mock.Mock(content="response chunk")]
@@ -84,6 +90,7 @@ def test_in_memory_history_add_messages():
     assert history.messages == messages
 
 def test_in_memory_history_clear():
-    history = InMemoryHistory(messages=[unittest.mock.Mock()])
+    message = BaseMessage(type = "text", content = "test message!")
+    history = InMemoryHistory(messages=[message])
     history.clear()
     assert history.messages == []

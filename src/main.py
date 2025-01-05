@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 """
 Main program file to manage the running of Timely.
 

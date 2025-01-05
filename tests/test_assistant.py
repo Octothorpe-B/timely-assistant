@@ -6,6 +6,7 @@ from unittest.mock import patch, mock_open
 import pytest
 import json
 import unittest
+
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from assistant import (
     save_json_to_dict,
@@ -18,6 +19,7 @@ from assistant import (
     InMemoryHistory,
     BaseMessage,
 )
+
 
 def test_save_json_to_dict_valid_json():
     """Test save_json_to_dict function with valid JSON."""

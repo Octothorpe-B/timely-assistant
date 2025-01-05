@@ -20,7 +20,7 @@ def obtain_calendar():
     service = initialize_connection()
 
     # Initialize the connection with the Google Calendar API.
-    calendar_events = get_next_24hr_events(service)
+    calendar_events = fetch_events(service)
 
     # Return the calendar events.
     return calendar_events

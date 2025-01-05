@@ -68,7 +68,9 @@ def save_json_to_dict(response):
         return response_dict
 
     except json.JSONDecodeError as e:
-        print(f"\nError parsing JSON response in assistant.py file in save_json_to_dict() function: {e}")
+        print(
+            f"\nError parsing JSON response in assistant.py file in save_json_to_dict() function: {e}"
+        )
         return None
 
 
@@ -82,7 +84,8 @@ def initialize_classification_model(prompt_template):
         temperature=0.0,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
-        presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
+        # Penalize new tokens based on whether they appear in the text so far
+        presence_penalty=0.2,
         stream=True,  # Enable streaming of the response
         max_tokens=75,  # Limit the number of tokens generated
         format="json",  # Specify the output format
@@ -111,7 +114,8 @@ def initialize_conversational_model(action_prompt):
         temperature=0,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
-        presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
+        # Penalize new tokens based on whether they appear in the text so far
+        presence_penalty=0.2,
         stream=True,  # Enable streaming of the response
     )
 
@@ -173,7 +177,6 @@ def query_classifier(classification_model, question):
         print(chunk.content, end="", flush=True)
         total_tokens += len(chunk.content.split())
 
-
     output = save_json_to_dict(response)
 
     # Return the classifier values from the AI assistant.
@@ -188,7 +191,6 @@ def query_ai_assistant(conversational_model, question):
     # Initialize the response variable to store the model's response.
     response = ""
     total_tokens = 0
-
 
     for chunk in conversational_model.stream(
         {"question": question, "history": ""},

@@ -77,7 +77,9 @@ def calculate_time_bounds(time_field, time_direction_field, local_tz):
     Returns:
     tuple: A tuple containing the start and end times in ISO 8601 format.
     """
-    print(f"calculate_time_bounds called with: {time_field}, {time_direction_field}, {local_tz}")
+    print(
+        f"calculate_time_bounds called with: {time_field}, {time_direction_field}, {local_tz}"
+    )
 
     # Get the current date and time in the specified time zone.
     now = datetime.now(local_tz)
@@ -85,8 +87,12 @@ def calculate_time_bounds(time_field, time_direction_field, local_tz):
     if time_field == "null":
         # Handle the case where time_field is "null"
         if time_direction_field == "today":
-            start_time = local_tz.localize(datetime(now.year, now.month, now.day, 0, 0, 0))
-            end_time = local_tz.localize(datetime(now.year, now.month, now.day, 23, 59, 59))
+            start_time = local_tz.localize(
+                datetime(now.year, now.month, now.day, 0, 0, 0)
+            )
+            end_time = local_tz.localize(
+                datetime(now.year, now.month, now.day, 23, 59, 59)
+            )
         else:
             start_time = now
             end_time = now
@@ -118,8 +124,12 @@ def calculate_time_bounds(time_field, time_direction_field, local_tz):
             start_time = now
             end_time = now + time_delta
         elif time_direction_field == "today":
-            start_time = local_tz.localize(datetime(now.year, now.month, now.day, 0, 0, 0))
-            end_time = local_tz.localize(datetime(now.year, now.month, now.day, 23, 59, 59))
+            start_time = local_tz.localize(
+                datetime(now.year, now.month, now.day, 0, 0, 0)
+            )
+            end_time = local_tz.localize(
+                datetime(now.year, now.month, now.day, 23, 59, 59)
+            )
         elif time_direction_field == "null":
             start_time = now
             end_time = now
@@ -178,7 +188,14 @@ def process_calendar_event(event, local_tz):
         event_day = start_time.astimezone(local_tz).strftime("%A, %B %d, %Y")
 
         # Return the processed event data.
-        return [event_type, summary, start_time_formatted, end_time_formatted, location, event_day]
+        return [
+            event_type,
+            summary,
+            start_time_formatted,
+            end_time_formatted,
+            location,
+            event_day,
+        ]
     except Exception as e:
         print(f"An error occurred while running process_calendar_event(): {e}")
         return None
@@ -189,9 +206,7 @@ def get_event_times(event):
     start = event.get("start", {}).get(
         "dateTime", event.get("start", {}).get("date", None)
     )
-    end = event.get("end", {}).get(
-        "dateTime", event.get("end", {}).get("date", None)
-    )
+    end = event.get("end", {}).get("dateTime", event.get("end", {}).get("date", None))
 
     # Convert start and end times to datetime objects if they are strings
     if isinstance(start, str):
@@ -223,6 +238,7 @@ def format_event_times(start, end, local_tz):
     # Return the formatted start and end times.
     return start_time_formatted, end_time_formatted
 
+
 def is_all_day_event(start_time_formatted, end_time_formatted):
     """Check if an event is an all-day event."""
     if start_time_formatted == "12:00 AM" and end_time_formatted == "12:00 AM":
@@ -246,12 +262,20 @@ def get_time_bounded_events(service, classifications):
         print("classifications!", classifications)
 
         # Ensure classifications are correctly handled
-        classification1 = classifications[0].lower() if classifications[0] and classifications[0].lower() != 'none' else "null"
-        classification2 = classifications[1].lower() if classifications[1] and classifications[1].lower() != 'none' else "null"
+        classification1 = (
+            classifications[0].lower()
+            if classifications[0] and classifications[0].lower() != "none"
+            else "null"
+        )
+        classification2 = (
+            classifications[1].lower()
+            if classifications[1] and classifications[1].lower() != "none"
+            else "null"
+        )
 
         print("classification1", classification1)
         print("classification2", classification2)
-        
+
         # Obtain the current day events at the start of the user's time frame and the end of the user's time frame.
         start_time_iso, end_time_iso = calculate_time_bounds(
             classification1, classification2, local_tz

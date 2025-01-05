@@ -30,8 +30,10 @@ def configure_slack_client():
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     app_token = os.getenv("SLACK_APP_TOKEN")
     channel_id = os.getenv("SLACK_CHANNEL_ID")
-    logging.debug(f"Slack Token: {slack_token}")  # Debugging line to print the token
-    logging.debug(f"Channel ID: {channel_id}")  # Debugging line to print the channel ID
+    # Debugging line to print the token
+    logging.debug(f"Slack Token: {slack_token}")
+    # Debugging line to print the channel ID
+    logging.debug(f"Channel ID: {channel_id}")
     return slack_token, app_token, channel_id
 
 
@@ -164,7 +166,9 @@ def handle_message(user, question, channel):
     slack_token = os.getenv("SLACK_BOT_TOKEN")
 
     # Setup and obtain the classification and conversational models.
-    classification_model = assistant.initialize_classification_model("src/prompt-templates/classifier-prompt.txt")
+    classification_model = assistant.initialize_classification_model(
+        "src/prompt-templates/classifier-prompt.txt"
+    )
 
     # Start the diagnostic experiments' timing and initialize the analytics .
     start_time = time.time()
@@ -185,9 +189,7 @@ def handle_message(user, question, channel):
     print("action_result: ", action_prompt)
 
     # Setup and obtain the conversational model.
-    conversational_model = assistant.initialize_conversational_model(
-        action_prompt
-    )
+    conversational_model = assistant.initialize_conversational_model(action_prompt)
 
     # Ask the AI assistant to answer the question.
     response, conversation_tokens = assistant.query_ai_assistant(

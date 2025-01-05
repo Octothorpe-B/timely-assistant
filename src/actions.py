@@ -57,10 +57,14 @@ class CalendarAction(BaseAction):
         service = google_calendar.initialize_connection()
 
         # Re-initialize the classification model with the time classifier prompt.
-        classification_model = assistant.initialize_classification_model("src/prompt-templates/time-classifier-prompt.txt")
+        classification_model = assistant.initialize_classification_model(
+            "src/prompt-templates/time-classifier-prompt.txt"
+        )
 
         # Get the classifier output and tokens from the user's question.
-        classifier_output, classifier_tokens = assistant.query_classifier(classification_model, self.question)
+        classifier_output, classifier_tokens = assistant.query_classifier(
+            classification_model, self.question
+        )
 
         # Convert the classifier values dictionary to a list of strings
         classifier_values_list = [

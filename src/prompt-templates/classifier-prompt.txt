@@ -18,17 +18,6 @@ Sub-action Field:
 - "null": For "other" classification or cases where no sub-action is required.
 - For "conversation", use "answer" for direct questions, "small-talk" for casual chats, or "respond" for single response conversations.
 
-Time Field:
-- Express in numerical format with time metrics (e.g., "15 Minutes" or "2 Hours", "5 Days" "2 Weeks" "1 Year").
-- If the time metric is unclear, set this field to "null".
-
-Time-Direction Field:
-- Determine whether the user is requesting something "before" or "after" in relation to what the user is asking for.
-- "before": The user is asking for searching or creating or updating or deleting that takes place in the past.
-- "after": The user is asking for searching or creating or updating or deleting that takes place in the future.
-- "today": The user is asking for searching or creating or updating or deleting something that takes place today.
-- "null": It's unclear what time direction the user is asking for.
-
 Tone Field:
 - Assess the tone of the user's query: "Positive", "Negative", "Neutral", or more granular tones such as "frustrated", "curious", etc.
 - For non-conversational questions, set to "null".
@@ -38,15 +27,10 @@ Complexity Field:
   - "simple" for direct questions requiring a short, concise response.
   - "compound" for questions requiring more analysis or multiple answers.
 
-Edge Cases:
-- If classification is unclear or ambiguous, classify as "other" or return "null" for sub-action and time fields.
-
 Your output should strictly use the following schema:
 {{
     "classification": "string",
     "sub-action": "string",
-    "time": "string",
-    "time-direction": "string",
     "tone" : "string",
     "complexity": "string"
 }}

@@ -164,7 +164,7 @@ def handle_message(user, question, channel):
     slack_token = os.getenv("SLACK_BOT_TOKEN")
 
     # Setup and obtain the classification and conversational models.
-    classification_model = assistant.initialize_classification_model()
+    classification_model = assistant.initialize_classification_model("src/prompt-templates/classifier-prompt.txt")
 
     # Start the diagnostic experiments' timing and initialize the analytics .
     start_time = time.time()
@@ -178,7 +178,7 @@ def handle_message(user, question, channel):
     )
 
     # TODO: Implement the code to handle the user's question and take the desired action.
-    action = actions.action_factory(classifications)
+    action = actions.action_factory(classifications, question)
     action_prompt = action.execute()
 
     # print("action_result type:", type(action_result))
@@ -186,12 +186,12 @@ def handle_message(user, question, channel):
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(
-        classifications, action_prompt
+        action_prompt
     )
 
     # Ask the AI assistant to answer the question.
     response, conversation_tokens = assistant.query_ai_assistant(
-        classification_model, conversational_model, question
+        conversational_model, question
     )
 
     # End the diagnostic experiments' timing.

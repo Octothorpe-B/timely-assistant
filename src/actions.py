@@ -7,13 +7,16 @@ import navigation
 import reminders
 import slack_api
 
+action_type = ""
+
 
 class BaseAction:
     """Base class to handle all of the AI assistant's actions."""
 
-    def __init__(self, classifications):
+    def __init__(self, classifications, question):
         """Initialize the action with the classifications."""
         self.classifications = classifications
+        self.question = question
 
     def execute(self):
         """Execute the action."""
@@ -53,16 +56,22 @@ class CalendarAction(BaseAction):
         # Initialize the connection to the Google Calendar API.
         service = google_calendar.initialize_connection()
 
+        # Re-initialize the classification model with the time classifier prompt.
+        classification_model = assistant.initialize_classification_model("src/prompt-templates/time-classifier-prompt.txt")
+
+        # Get the classifier output and tokens from the user's question.
+        classifier_output, classifier_tokens = assistant.query_classifier(classification_model, self.question)
+
         # Convert the classifier values dictionary to a list of strings
         classifier_values_list = [
-            f"{value}" for key, value in self.classifications.items()
+            f"{value}" for key, value in classifier_output.items()
         ]
 
-        print("Classifier values list:", classifier_values_list)
+        print("Classifier values list:", classifier_output)
 
-        # Get the next 24 hours of events from the Google Calendar API.
+        # Get the events from the Google Calendar API.
         calendar_data = google_calendar.get_time_bounded_events(
-            service, classifier_values_list
+            service, classifier_output
         )
 
         # Save the calendar events to a json file.
@@ -197,15 +206,15 @@ class OtherAction(BaseAction):
         print("Executing other action")
 
 
-def action_factory(classifications):
+def action_factory(classifications, question):
     """Factory method to create action instances based on classifications."""
     if "calendar" in classifications["classification"]:
-        return CalendarAction(classifications)
+        return CalendarAction(classifications, question)
     elif "reminders" in classifications["classification"]:
-        return ReminderAction(classifications)
+        return ReminderAction(classifications, question)
     elif "conversation" in classifications["classification"]:
-        return ConversationAction(classifications)
+        return ConversationAction(classifications, question)
     elif "other" in classifications["classification"]:
-        return OtherAction(classifications)
+        return OtherAction(classifications, question)
     else:
         raise ValueError("Unknown classification")

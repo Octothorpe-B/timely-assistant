@@ -180,7 +180,7 @@ def process_calendar_event(event, local_tz):
         # Return the processed event data.
         return [event_type, summary, start_time_formatted, end_time_formatted, location, event_day]
     except Exception as e:
-        print(f"An error occurred while processing the event: {e}")
+        print(f"An error occurred while running process_calendar_event(): {e}")
         return None
 
 
@@ -242,9 +242,12 @@ def get_time_bounded_events(service, classifications):
             "America/New_York"
         )  # Replace with your local time zone
 
+        classifications = list(classifications.values())
+        print("classifications!", classifications)
+
         # Ensure classifications are correctly handled
-        classification1 = classifications[2].lower() if classifications[2] and classifications[2].lower() != 'none' else "null"
-        classification2 = classifications[3].lower() if classifications[3] and classifications[3].lower() != 'none' else "null"
+        classification1 = classifications[0].lower() if classifications[0] and classifications[0].lower() != 'none' else "null"
+        classification2 = classifications[1].lower() if classifications[1] and classifications[1].lower() != 'none' else "null"
 
         print("classification1", classification1)
         print("classification2", classification2)
@@ -281,5 +284,5 @@ def get_time_bounded_events(service, classifications):
         print(f"An error occurred: {error}")
         return []
     except Exception as e:
-        print(f"An unexpected error occurred: {e}")
+        print(f"An unexpected error occurred in get_time_bounded_events(): {e}")
         return []

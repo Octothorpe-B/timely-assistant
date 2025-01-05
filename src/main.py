@@ -27,8 +27,6 @@ def main():
     # Connect to the Slack API to send the user chats and notifications.
     slack_token, app_token, channel_id = slack_api.configure_slack_client()
 
-    output = slack_api.list_channels(slack_token)
-
     # Run the flask app to listen for events from the Slack API.
     slack_api.process_event(slack_token, app_token, channel_id)
 

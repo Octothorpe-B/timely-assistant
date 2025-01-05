@@ -58,30 +58,21 @@ def save_json_to_dict(response):
     """Function to save the JSON data to a dictionary."""
     # Parse the JSON response
     try:
-        # Load the JSON data from the file.
+        # Load the JSON data from the response.
         response_json = json.loads(response)
 
-        # Extract and store relevant values.
-        # NOTE: In order to add new classifications you need to manually include them in in this extracted_values dictionary.
-        extracted_values = {
-            "classification": response_json.get("classification"),
-            "sub-action": response_json.get("sub-action"),
-            "time": response_json.get("time"),
-            "time-direction": response_json.get("time-direction"),
-            "tone": response_json.get("tone"),
-            "complexity": response_json.get("complexity"),
-        }
+        # Convert the JSON data to a dictionary.
+        response_dict = dict(response_json)
 
-        # print("\nExtracted values:", extracted_values)
-        # Return the extracted values from the JSON response.
-        return extracted_values
+        # Return the dictionary.
+        return response_dict
 
     except json.JSONDecodeError as e:
         print(f"\nError parsing JSON response in assistant.py file in save_json_to_dict() function: {e}")
         return None
 
 
-def initialize_classification_model():
+def initialize_classification_model(prompt_template):
     """Function to initialize the model for classifying the user's question."""
     # Pre answer prompt template for determining how to answer the question and what actions to take on behalf of the user.
 
@@ -93,12 +84,12 @@ def initialize_classification_model():
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
         stream=True,  # Enable streaming of the response
-        max_tokens=50,  # Limit the number of tokens generated
+        max_tokens=75,  # Limit the number of tokens generated
         format="json",  # Specify the output format
     )
 
     # Define the different prompts used for running the model.
-    with open("src/prompt-templates/classifier-prompt.txt", "r") as f:
+    with open(prompt_template, "r") as f:
         classification_prompt_template = f.read()
 
     classifier_prompt = PromptTemplate(
@@ -112,7 +103,7 @@ def initialize_classification_model():
     return classification_model_chain
 
 
-def initialize_conversational_model(classifier_values, action_prompt):
+def initialize_conversational_model(action_prompt):
     """Function to initialize the model for conversational responses."""
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
@@ -123,9 +114,6 @@ def initialize_conversational_model(classifier_values, action_prompt):
         presence_penalty=0.2,  # Penalize new tokens based on whether they appear in the text so far
         stream=True,  # Enable streaming of the response
     )
-
-    # Join the list into a single string
-    classifier_values_str = ", ".join(classifier_values)
 
     # Ensure action_prompt is not None
     if action_prompt is None:
@@ -185,13 +173,14 @@ def query_classifier(classification_model, question):
         print(chunk.content, end="", flush=True)
         total_tokens += len(chunk.content.split())
 
-    classifier_values = save_json_to_dict(response)
+
+    output = save_json_to_dict(response)
 
     # Return the classifier values from the AI assistant.
-    return classifier_values, total_tokens
+    return output, total_tokens
 
 
-def query_ai_assistant(classifications, conversational_model, question):
+def query_ai_assistant(conversational_model, question):
     """Function to query the AI assistant with a question."""
     # Print out a blank line to separate the lines in the terminal.
     print()
@@ -199,6 +188,7 @@ def query_ai_assistant(classifications, conversational_model, question):
     # Initialize the response variable to store the model's response.
     response = ""
     total_tokens = 0
+
 
     for chunk in conversational_model.stream(
         {"question": question, "history": ""},

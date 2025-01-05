@@ -95,6 +95,28 @@ class TestActions:
             action.delete_event()
             mock_print.assert_called_once_with("Deleting calendar event")
 
+    def test_calendar_action_execute(self):
+        """Test the execute method of CalendarAction."""
+        with patch.object(CalendarAction, 'add_event') as mock_add_event:
+            action = CalendarAction({"sub-action": "add"}, "Add a meeting at 10 AM")
+            action.execute()
+            mock_add_event.assert_called_once()
+
+        with patch.object(CalendarAction, 'update_event') as mock_update_event:
+            action = CalendarAction({"sub-action": "update"}, "Update the meeting time")
+            action.execute()
+            mock_update_event.assert_called_once()
+
+        with patch.object(CalendarAction, 'delete_event') as mock_delete_event:
+            action = CalendarAction({"sub-action": "delete"}, "Delete the meeting")
+            action.execute()
+            mock_delete_event.assert_called_once()
+
+        with patch.object(CalendarAction, 'get_event_info') as mock_get_event_info:
+            action = CalendarAction({"sub-action": "get-info"}, "What meetings do I have today?")
+            action.execute()
+            mock_get_event_info.assert_called_once()
+
     def test_reminder_action_add_reminder(self):
         """Test the add_reminder method of ReminderAction."""
         action = ReminderAction({"sub-action": "add"}, "Add a reminder to call John")
@@ -123,6 +145,28 @@ class TestActions:
             action.get_reminder_info()
             mock_print.assert_called_once_with("Getting reminder info")
 
+    def test_reminder_action_execute(self):
+        """Test the execute method of ReminderAction."""
+        with patch.object(ReminderAction, 'add_reminder') as mock_add_reminder:
+            action = ReminderAction({"sub-action": "add"}, "Add a reminder to call John")
+            action.execute()
+            mock_add_reminder.assert_called_once()
+
+        with patch.object(ReminderAction, 'update_reminder') as mock_update_reminder:
+            action = ReminderAction({"sub-action": "update"}, "Update the reminder time")
+            action.execute()
+            mock_update_reminder.assert_called_once()
+
+        with patch.object(ReminderAction, 'delete_reminder') as mock_delete_reminder:
+            action = ReminderAction({"sub-action": "delete"}, "Delete the reminder")
+            action.execute()
+            mock_delete_reminder.assert_called_once()
+
+        with patch.object(ReminderAction, 'get_reminder_info') as mock_get_reminder_info:
+            action = ReminderAction({"sub-action": "get-info"}, "What reminders do I have?")
+            action.execute()
+            mock_get_reminder_info.assert_called_once()
+
     def test_conversation_action_answer_question(self):
         """Test the answer_question method of ConversationAction."""
         action = ConversationAction({"sub-action": "answer"}, "What is AI?")
@@ -143,6 +187,23 @@ class TestActions:
         with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
             result = action.respond()
             assert "Prompt template content" in result
+
+    def test_conversation_action_execute(self):
+        """Test the execute method of ConversationAction."""
+        with patch.object(ConversationAction, 'answer_question') as mock_answer_question:
+            action = ConversationAction({"sub-action": "answer"}, "What is AI?")
+            action.execute()
+            mock_answer_question.assert_called_once()
+
+        with patch.object(ConversationAction, 'small_talk') as mock_small_talk:
+            action = ConversationAction({"sub-action": "small-talk"}, "How's the weather?")
+            action.execute()
+            mock_small_talk.assert_called_once()
+
+        with patch.object(ConversationAction, 'respond') as mock_respond:
+            action = ConversationAction({"sub-action": "respond"}, "Tell me a joke.")
+            action.execute()
+            mock_respond.assert_called_once()
 
     def test_other_action_execute(self):
         """Test the execute method of OtherAction."""

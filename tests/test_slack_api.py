@@ -1,3 +1,5 @@
+"""Test cases for the Slack API module."""
+
 import os
 import unittest
 import sys
@@ -69,19 +71,39 @@ class TestSlackAPI(unittest.TestCase):
             list_channels("xoxb-test-token")
             self.assertIn("Error fetching conversations: invalid_auth", log.output[0])
 
-    #    @patch("slack_api.SocketModeClient.connect")
-    #    @patch("slack_api.SocketModeClient")
-    #    @patch("slack_api.WebClient")
-    #    def test_process_event(self, MockWebClient, MockSocketModeClient, mock_connect):
-    #        mock_client = MockSocketModeClient.return_value
-    #        mock_web_client = MockWebClient.return_value
-    #        mock_web_client.auth_test.return_value = {"user_id": "U123456"}
-    #        process_event("xoxb-test-token", "xapp-test-token", "C123456")
-    #        self.assertTrue(mock_connect.called)
-    #        self.assertIn(
-    #            mock_client.socket_mode_request_listeners[0],
-    #            mock_client.socket_mode_request_listeners,
-    #        )
+    @patch("slack_api.SocketModeClient")
+    @patch("slack_api.WebClient")
+    @patch("time.sleep", side_effect=Exception("Exit loop"))  # Mock time.sleep to exit loop
+    def test_process_event(self, mock_sleep, MockWebClient, MockSocketModeClient):
+        mock_client = MockSocketModeClient.return_value
+        mock_web_client = MockWebClient.return_value
+        mock_web_client.auth_test.return_value = {"user_id": "U123456"}
+
+        # Simulate a single event to process
+        mock_client.socket_mode_request_listeners = []
+        mock_event = {
+            "type": "events_api",
+            "payload": {
+                "event": {
+                    "type": "message",
+                    "user": "U123456",
+                    "text": "Hello",
+                    "channel": "C123456",
+                    "event_ts": "1234567890.123456",
+                }
+            },
+        }
+        mock_client.socket_mode_request_listeners.append(lambda client, request: request(mock_event))
+
+        with self.assertRaises(Exception) as context:
+            process_event("xoxb-test-token", "xapp-test-token", "C123456")
+        self.assertEqual(str(context.exception), "Exit loop")
+
+        mock_client.connect.assert_called_once()
+        self.assertIn(
+            mock_client.socket_mode_request_listeners[0],
+            mock_client.socket_mode_request_listeners,
+        )
 
     @patch("slack_api.assistant.initialize_classification_model")
     @patch("slack_api.assistant.query_classifier")

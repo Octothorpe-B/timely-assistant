@@ -153,7 +153,9 @@ def process_event(slack_token, app_token, channel_id):
         client.socket_mode_request_listeners.append(handle_events)
 
     # Establish a connection to the Slack API.
+    print("Connecting to Slack API...")
     client.connect()
+    print("Connected to Slack API.")
 
     # Start the Socket Mode client to process the events.
     while True:

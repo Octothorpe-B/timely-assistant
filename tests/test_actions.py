@@ -1,3 +1,5 @@
+"""Test the action classes and factory function."""
+
 import pytest
 import os
 import sys
@@ -71,6 +73,97 @@ class TestActions:
         )
 
         assert result == calendar_prompt
+
+    def test_calendar_action_add_event(self):
+        """Test the add_event method of CalendarAction."""
+        action = CalendarAction({"sub-action": "add"}, "Add a meeting at 10 AM")
+        with patch("builtins.print") as mock_print:
+            action.add_event()
+            mock_print.assert_called_once_with("Adding calendar event")
+
+    def test_calendar_action_update_event(self):
+        """Test the update_event method of CalendarAction."""
+        action = CalendarAction({"sub-action": "update"}, "Update the meeting time")
+        with patch("builtins.print") as mock_print:
+            action.update_event()
+            mock_print.assert_called_once_with("Updating calendar event")
+
+    def test_calendar_action_delete_event(self):
+        """Test the delete_event method of CalendarAction."""
+        action = CalendarAction({"sub-action": "delete"}, "Delete the meeting")
+        with patch("builtins.print") as mock_print:
+            action.delete_event()
+            mock_print.assert_called_once_with("Deleting calendar event")
+
+    def test_reminder_action_add_reminder(self):
+        """Test the add_reminder method of ReminderAction."""
+        action = ReminderAction({"sub-action": "add"}, "Add a reminder to call John")
+        with patch("builtins.print") as mock_print:
+            action.add_reminder()
+            mock_print.assert_called_once_with("Adding reminder")
+
+    def test_reminder_action_update_reminder(self):
+        """Test the update_reminder method of ReminderAction."""
+        action = ReminderAction({"sub-action": "update"}, "Update the reminder time")
+        with patch("builtins.print") as mock_print:
+            action.update_reminder()
+            mock_print.assert_called_once_with("Updating reminder")
+
+    def test_reminder_action_delete_reminder(self):
+        """Test the delete_reminder method of ReminderAction."""
+        action = ReminderAction({"sub-action": "delete"}, "Delete the reminder")
+        with patch("builtins.print") as mock_print:
+            action.delete_reminder()
+            mock_print.assert_called_once_with("Deleting reminder")
+
+    def test_reminder_action_get_reminder_info(self):
+        """Test the get_reminder_info method of ReminderAction."""
+        action = ReminderAction({"sub-action": "get-info"}, "What reminders do I have?")
+        with patch("builtins.print") as mock_print:
+            action.get_reminder_info()
+            mock_print.assert_called_once_with("Getting reminder info")
+
+    def test_conversation_action_answer_question(self):
+        """Test the answer_question method of ConversationAction."""
+        action = ConversationAction({"sub-action": "answer"}, "What is AI?")
+        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+            result = action.answer_question()
+            assert "Prompt template content" in result
+
+    def test_conversation_action_small_talk(self):
+        """Test the small_talk method of ConversationAction."""
+        action = ConversationAction({"sub-action": "small-talk"}, "How's the weather?")
+        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+            result = action.small_talk()
+            assert "Prompt template content" in result
+
+    def test_conversation_action_respond(self):
+        """Test the respond method of ConversationAction."""
+        action = ConversationAction({"sub-action": "respond"}, "Tell me a joke.")
+        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+            result = action.respond()
+            assert "Prompt template content" in result
+
+    def test_other_action_execute(self):
+        """Test the execute method of OtherAction."""
+        action = OtherAction({}, "Do something else.")
+        with patch("builtins.print") as mock_print:
+            action.execute()
+            mock_print.assert_called_once_with("Executing other action")
+
+    def test_action_factory_calendar(self):
+        """Test the action_factory function for calendar classification."""
+        classifications = {"classification": "calendar"}
+        question = "What meetings do I have today?"
+        action = action_factory(classifications, question)
+        assert isinstance(action, CalendarAction)
+
+    def test_action_factory_reminders(self):
+        """Test the action_factory function for reminders classification."""
+        classifications = {"classification": "reminders"}
+        question = "What reminders do I have?"
+        action = action_factory(classifications, question)
+        assert isinstance(action, ReminderAction)
 
     def test_action_factory_conversation(self):
         """Test the action_factory function for conversation classification."""

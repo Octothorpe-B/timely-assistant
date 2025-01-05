@@ -43,7 +43,14 @@ class TestActions:
         mock_initialize_classification_model.return_value = "mock_classification_model"
         mock_query_classifier.return_value = ({"key": "value"}, 10)
         mock_get_time_bounded_events.return_value = [
-            ("Meeting", "Team Sync", "10:00 AM", "11:00 AM", "Conference Room", "Monday"),
+            (
+                "Meeting",
+                "Team Sync",
+                "10:00 AM",
+                "11:00 AM",
+                "Conference Room",
+                "Monday",
+            ),
         ]
         action = CalendarAction(
             {"sub-action": "get_event_info"}, "What meetings do I have today?"
@@ -59,11 +66,11 @@ class TestActions:
 
         # Format the calendar prompt with the calendar data.
         calendar_prompt = prompt_template.format(
-            classifier_data=mock_initialize_classification_model.return_value, calendar_data=expected_result
+            classifier_data=mock_initialize_classification_model.return_value,
+            calendar_data=expected_result,
         )
 
         assert result == calendar_prompt
-
 
     def test_action_factory_conversation(self):
         """Test the action_factory function for conversation classification."""
@@ -72,14 +79,12 @@ class TestActions:
         action = action_factory(classifications, question)
         assert isinstance(action, ConversationAction)
 
-
     def test_action_factory_other(self):
         """Test the action_factory function for other classification."""
         classifications = {"classification": "other"}
         question = "Do something else."
         action = action_factory(classifications, question)
         assert isinstance(action, OtherAction)
-
 
     def test_action_factory_unknown(self):
         """Test the action_factory function for unknown classification."""

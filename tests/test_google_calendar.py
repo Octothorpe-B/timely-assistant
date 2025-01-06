@@ -4,6 +4,7 @@ import google_calendar
 import json
 import pytz
 from datetime import datetime, timedelta
+from googleapiclient.errors import HttpError
 
 # Mock data for testing
 mock_event = {
@@ -110,3 +111,44 @@ def test_format_event_times():
 def test_is_all_day_event():
     assert google_calendar.is_all_day_event("12:00 AM", "12:00 AM") == True
     assert google_calendar.is_all_day_event("10:00 AM", "11:00 AM") == False
+
+
+@pytest.mark.parametrize("time_field,time_direction", [
+    ("null", "today"),
+    ("1 Week", "after"),
+    ("2 Years", "before"),
+    ("null", "null")
+])
+def test_calculate_time_bounds_variations(time_field, time_direction):
+    local_tz = pytz.timezone("America/New_York")
+    start_time_iso, end_time_iso = google_calendar.calculate_time_bounds(
+        time_field, time_direction, local_tz
+    )
+    assert start_time_iso is not None
+    assert end_time_iso is not None
+
+
+@patch("google_calendar.fetch_events")
+def test_fetch_events_valid(mock_fetch_events):
+    mock_fetch_events.return_value = mock_events_result
+    mock_service = Mock()
+    result = google_calendar.fetch_events(
+        mock_service, "2025-01-05T00:00:00-05:00", "2025-01-05T23:59:59-05:00"
+    )
+    assert result == mock_events_result
+
+
+@patch("google_calendar.fetch_events", side_effect=HttpError(Mock(status=400), b"Error message"))
+def test_get_time_bounded_events_http_error(mock_fetch_events):
+    service = Mock()
+    classifications = {"time": "1 Hour", "time-direction": "after"}
+    result = google_calendar.get_time_bounded_events(service, classifications)
+    assert result == []
+
+
+@patch("google_calendar.fetch_events", side_effect=Exception("Unknown error"))
+def test_get_time_bounded_events_generic_exception(mock_fetch_events):
+    service = Mock()
+    classifications = {"time": "1 Day", "time-direction": "before"}
+    result = google_calendar.get_time_bounded_events(service, classifications)
+    assert result == []

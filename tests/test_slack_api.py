@@ -3,8 +3,12 @@
 import os
 import unittest
 import sys
-from unittest.mock import patch, Mock
+from unittest.mock import patch, Mock, call
 from slack_sdk.errors import SlackApiError
+from slack_sdk.socket_mode.request import SocketModeRequest
+from slack_sdk.socket_mode import SocketModeClient
+
+SocketModeClient.socket_mode_request_listeners = []
 
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from slack_api import (
@@ -73,17 +77,19 @@ class TestSlackAPI(unittest.TestCase):
 
     @patch("slack_api.SocketModeClient")
     @patch("slack_api.WebClient")
-    @patch("time.sleep", side_effect=Exception("Exit loop"))  # Mock time.sleep to exit loop
+    @patch(
+        "time.sleep", side_effect=Exception("Exit loop")
+    )  # Mock time.sleep to exit loop
     def test_process_event(self, mock_sleep, MockWebClient, MockSocketModeClient):
         mock_client = MockSocketModeClient.return_value
         mock_web_client = MockWebClient.return_value
         mock_web_client.auth_test.return_value = {"user_id": "U123456"}
 
-        # Simulate a single event to process
-        mock_client.socket_mode_request_listeners = []
-        mock_event = {
-            "type": "events_api",
-            "payload": {
+        # Create a valid SocketModeRequest for the event
+        mock_request = SocketModeRequest(
+            type="events_api",
+            envelope_id="envelope-id",
+            payload={
                 "event": {
                     "type": "message",
                     "user": "U123456",
@@ -92,18 +98,24 @@ class TestSlackAPI(unittest.TestCase):
                     "event_ts": "1234567890.123456",
                 }
             },
-        }
-        mock_client.socket_mode_request_listeners.append(lambda client, request: request(mock_event))
+        )
+
+        # Clear any existing listeners
+        # mock_client.socket_mode_request_listeners.clear()
+
+        # Add our test listener that calls our mock_request
+        def mock_listener(client, request):
+            if request.type == "events_api":
+                # Call the existing listener code directly
+                client.socket_mode_request_listeners[0](client, mock_request)
+
+        mock_client.socket_mode_request_listeners.append(mock_listener)
 
         with self.assertRaises(Exception) as context:
             process_event("xoxb-test-token", "xapp-test-token", "C123456")
         self.assertEqual(str(context.exception), "Exit loop")
 
         mock_client.connect.assert_called_once()
-        self.assertIn(
-            mock_client.socket_mode_request_listeners[0],
-            mock_client.socket_mode_request_listeners,
-        )
 
     @patch("slack_api.assistant.initialize_classification_model")
     @patch("slack_api.assistant.query_classifier")
@@ -163,6 +175,28 @@ class TestSlackAPI(unittest.TestCase):
             "U123456", "thumbsup", {"channel": "C123456"}, "C123456"
         )
         self.assertTrue(mock_send_slack_message.called)
+
+    @patch("slack_api.WebClient")
+    @patch("slack_api.SocketModeClient.connect")
+    @patch("slack_api.SocketModeClient")
+    @patch("time.sleep", side_effect=Exception("Exit loop"))
+    def test_handle_events(
+        self,
+        mock_sleep,
+        mock_socket_mode_client_class,
+        mock_connect,
+        mock_web_client_class,
+    ):
+        # Use the same mocked SocketModeClient throughout
+        client = Mock()
+        client.socket_mode_request_listeners = []
+        mock_socket_mode_client_class.return_value = client
+
+        with self.assertRaises(Exception) as context:
+            process_event("xoxb-test-token", "xapp-test-token", "C123456")
+
+        self.assertEqual(str(context.exception), "Exit loop")
+        self.assertEqual(len(client.socket_mode_request_listeners), 1)
 
 
 if __name__ == "__main__":

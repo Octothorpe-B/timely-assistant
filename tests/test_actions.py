@@ -4,7 +4,10 @@ import pytest
 import os
 import sys
 from unittest.mock import patch, Mock, mock_open
+from slack_sdk.socket_mode.request import SocketModeRequest
+from slack_sdk.socket_mode import SocketModeClient
 
+SocketModeClient.socket_mode_request_listeners = []
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), "../src")))
 from actions import (
     BaseAction,
@@ -97,27 +100,29 @@ class TestActions:
 
     def test_calendar_action_execute(self):
         """Test the execute method of CalendarAction."""
-        with patch.object(CalendarAction, 'add_event') as mock_add_event:
+        with patch.object(CalendarAction, "add_event") as mock_add_event:
             action = CalendarAction({"sub-action": "add"}, "Add a meeting at 10 AM")
             action.execute()
             mock_add_event.assert_called_once()
 
-        with patch.object(CalendarAction, 'update_event') as mock_update_event:
+        with patch.object(CalendarAction, "update_event") as mock_update_event:
             action = CalendarAction({"sub-action": "update"}, "Update the meeting time")
             action.execute()
             mock_update_event.assert_called_once()
 
-        with patch.object(CalendarAction, 'delete_event') as mock_delete_event:
+        with patch.object(CalendarAction, "delete_event") as mock_delete_event:
             action = CalendarAction({"sub-action": "delete"}, "Delete the meeting")
             action.execute()
             mock_delete_event.assert_called_once()
 
-        with patch.object(CalendarAction, 'get_event_info') as mock_get_event_info:
-            action = CalendarAction({"sub-action": "get-info"}, "What meetings do I have today?")
+        with patch.object(CalendarAction, "get_event_info") as mock_get_event_info:
+            action = CalendarAction(
+                {"sub-action": "get-info"}, "What meetings do I have today?"
+            )
             action.execute()
             mock_get_event_info.assert_called_once()
 
-        with patch.object(CalendarAction, 'respond') as mock_respond:
+        with patch.object(CalendarAction, "respond") as mock_respond:
             action = CalendarAction({"sub-action": "null"}, "No specific action")
             action.execute()
             mock_respond.assert_called_once()
@@ -152,27 +157,35 @@ class TestActions:
 
     def test_reminder_action_execute(self):
         """Test the execute method of ReminderAction."""
-        with patch.object(ReminderAction, 'add_reminder') as mock_add_reminder:
-            action = ReminderAction({"sub-action": "add"}, "Add a reminder to call John")
+        with patch.object(ReminderAction, "add_reminder") as mock_add_reminder:
+            action = ReminderAction(
+                {"sub-action": "add"}, "Add a reminder to call John"
+            )
             action.execute()
             mock_add_reminder.assert_called_once()
 
-        with patch.object(ReminderAction, 'update_reminder') as mock_update_reminder:
-            action = ReminderAction({"sub-action": "update"}, "Update the reminder time")
+        with patch.object(ReminderAction, "update_reminder") as mock_update_reminder:
+            action = ReminderAction(
+                {"sub-action": "update"}, "Update the reminder time"
+            )
             action.execute()
             mock_update_reminder.assert_called_once()
 
-        with patch.object(ReminderAction, 'delete_reminder') as mock_delete_reminder:
+        with patch.object(ReminderAction, "delete_reminder") as mock_delete_reminder:
             action = ReminderAction({"sub-action": "delete"}, "Delete the reminder")
             action.execute()
             mock_delete_reminder.assert_called_once()
 
-        with patch.object(ReminderAction, 'get_reminder_info') as mock_get_reminder_info:
-            action = ReminderAction({"sub-action": "get-info"}, "What reminders do I have?")
+        with patch.object(
+            ReminderAction, "get_reminder_info"
+        ) as mock_get_reminder_info:
+            action = ReminderAction(
+                {"sub-action": "get-info"}, "What reminders do I have?"
+            )
             action.execute()
             mock_get_reminder_info.assert_called_once()
 
-        with patch.object(ReminderAction, 'respond') as mock_respond:
+        with patch.object(ReminderAction, "respond") as mock_respond:
             action = ReminderAction({"sub-action": "null"}, "No specific action")
             action.execute()
             mock_respond.assert_called_once()
@@ -180,42 +193,52 @@ class TestActions:
     def test_conversation_action_answer_question(self):
         """Test the answer_question method of ConversationAction."""
         action = ConversationAction({"sub-action": "answer"}, "What is AI?")
-        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+        with patch(
+            "builtins.open", new_callable=mock_open, read_data="Prompt template content"
+        ):
             result = action.answer_question()
             assert "Prompt template content" in result
 
     def test_conversation_action_small_talk(self):
         """Test the small_talk method of ConversationAction."""
         action = ConversationAction({"sub-action": "small-talk"}, "How's the weather?")
-        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+        with patch(
+            "builtins.open", new_callable=mock_open, read_data="Prompt template content"
+        ):
             result = action.small_talk()
             assert "Prompt template content" in result
 
     def test_conversation_action_respond(self):
         """Test the respond method of ConversationAction."""
         action = ConversationAction({"sub-action": "respond"}, "Tell me a joke.")
-        with patch("builtins.open", new_callable=mock_open, read_data="Prompt template content"):
+        with patch(
+            "builtins.open", new_callable=mock_open, read_data="Prompt template content"
+        ):
             result = action.respond()
             assert "Prompt template content" in result
 
     def test_conversation_action_execute(self):
         """Test the execute method of ConversationAction."""
-        with patch.object(ConversationAction, 'answer_question') as mock_answer_question:
+        with patch.object(
+            ConversationAction, "answer_question"
+        ) as mock_answer_question:
             action = ConversationAction({"sub-action": "answer"}, "What is AI?")
             action.execute()
             mock_answer_question.assert_called_once()
 
-        with patch.object(ConversationAction, 'small_talk') as mock_small_talk:
-            action = ConversationAction({"sub-action": "small-talk"}, "How's the weather?")
+        with patch.object(ConversationAction, "small_talk") as mock_small_talk:
+            action = ConversationAction(
+                {"sub-action": "small-talk"}, "How's the weather?"
+            )
             action.execute()
             mock_small_talk.assert_called_once()
 
-        with patch.object(ConversationAction, 'respond') as mock_respond:
+        with patch.object(ConversationAction, "respond") as mock_respond:
             action = ConversationAction({"sub-action": "respond"}, "Tell me a joke.")
             action.execute()
             mock_respond.assert_called_once()
 
-        with patch.object(ConversationAction, 'respond') as mock_respond:
+        with patch.object(ConversationAction, "respond") as mock_respond:
             action = ConversationAction({"sub-action": "null"}, "No specific action")
             action.execute()
             mock_respond.assert_called_once()

@@ -181,9 +181,7 @@ class ConversationAction(BaseAction):
     def small_talk(self):
         """Engage in small talk."""
         # Load the calendar action prompt template.
-        with open(
-            "src/prompt-templates/conversation-action-prompt.txt", "r"
-        ) as file:
+        with open("src/prompt-templates/conversation-action-prompt.txt", "r") as file:
             prompt_template = file.read()
 
         # Convert the classifier values dictionary to a list of strings

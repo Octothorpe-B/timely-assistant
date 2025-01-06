@@ -22,7 +22,6 @@ app = Flask(__name__)
 
 # NOTE: Global variable to store the message history.
 # For future development the store is where you would connect to the message history database.
-memory_storage = {}
 
 
 def configure_slack_client():
@@ -149,8 +148,8 @@ def process_event(slack_token, app_token, channel_id):
                 handle_reaction_removed(user, reaction, item, channel)
 
     # Add the event listener to the client.
-    if handle_events not in client.socket_mode_request_listeners:
-        client.socket_mode_request_listeners.append(handle_events)
+    # if handle_events not in client.socket_mode_request_listeners:
+    client.socket_mode_request_listeners.append(handle_events)
 
     # Establish a connection to the Slack API.
     print("Connecting to Slack API...")

@@ -1,2 +1,5 @@
+# Ignore all files in src/credentials and its subdirectories
 src/credentials/**
+
+# Ignore all files in src/data and its subdirectories
 src/data/**

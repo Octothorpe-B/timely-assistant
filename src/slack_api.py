@@ -182,6 +182,9 @@ def handle_message(user, question, channel):
         classification_model, question
     )
 
+    # Save the classification values inside of the classifications.json file in data.
+    assistant.save_classification_to_json(classifications, question)
+
     # TODO: Implement the code to handle the user's question and take the desired action.
     action = actions.action_factory(classifications, question)
     action_prompt = action.execute()
@@ -224,6 +227,9 @@ def handle_app_mention(user, question, channel):
     classifications, classifier_tokens = assistant.query_classifier(
         classification_model, question
     )
+
+    # Save the classification values inside of the classifications.json file in data.
+    assistant.save_classification_to_json(classifications, question)
 
     # Setup and obtain the conversational model.
     conversational_model = assistant.initialize_conversational_model(classifications)

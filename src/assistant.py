@@ -3,6 +3,7 @@
 from langchain_ollama import ChatOllama
 from langchain.prompts import PromptTemplate
 import time
+import os
 import json
 from operator import itemgetter
 from typing import List
@@ -74,6 +75,50 @@ def save_json_to_dict(response):
         return None
 
 
+def save_classification_to_json(classifier_values, question):
+    """Function to save the classifier values to a JSON file."""
+    file_path = "src/data/classifier_values.json"
+
+    print("\nCLASSIFIER VALUES\n",classifier_values)
+
+    nested_data = {
+        "question": question,
+        **classifier_values  
+    }
+
+    print("\nNESTED DATA\n", nested_data)
+
+        # Ensure the directory exists
+    os.makedirs(os.path.dirname(file_path), exist_ok=True)
+
+    # Open the file and read existing data, or create an empty list if the file doesn't exist
+    try:
+        if os.path.exists(file_path):
+            with open(file_path, 'r') as json_file:
+                # Attempt to read and load existing data
+                try:
+                    existing_data = json.load(json_file)
+                    print("\nExisting Data:", existing_data)
+                except json.JSONDecodeError:
+                    # If file is empty or corrupted, initialize an empty list
+                    print("Error: File is empty or corrupted, initializing an empty list.")
+                    existing_data = []
+        else:
+            existing_data = []  # If the file doesn't exist, initialize an empty list
+
+        # Append the new data
+        existing_data.append(nested_data)
+
+        # Write the updated data back to the file
+        with open(file_path, 'w') as json_file:
+            json.dump(existing_data, json_file, indent=4)
+
+        print(f"Data has been appended to {file_path}")
+
+    except Exception as e:
+        print(f"An error occurred: {e}")
+        
+
 def initialize_classification_model(prompt_template):
     """Function to initialize the model for classifying the user's question."""
     # Pre answer prompt template for determining how to answer the question and what actions to take on behalf of the user.
@@ -81,7 +126,7 @@ def initialize_classification_model(prompt_template):
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
         model="phi3:3.8b",
-        temperature=0.0,
+        temperature=0,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         # Penalize new tokens based on whether they appear in the text so far
@@ -110,8 +155,8 @@ def initialize_conversational_model(action_prompt):
     """Function to initialize the model for conversational responses."""
     # Initialize the Ollama model with parameters
     chat_model = ChatOllama(
-        model="llama3.1:8b",
-        temperature=0,
+        model="phi3:3.8b",
+        temperature=0.2,
         top_p=0.9,  # Top-p (nucleus) sampling
         frequency_penalty=0.2,  # Penalize new tokens based on their existing frequency
         # Penalize new tokens based on whether they appear in the text so far

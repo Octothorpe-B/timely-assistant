@@ -18,10 +18,6 @@ Sub-action Field:
 - "null": For "other" classification or cases where no sub-action is required.
 - For "conversation", use "answer" for direct questions, "small-talk" for casual chats, or "respond" for single response conversations.
 
-Tone Field:
-- Assess the tone of the user's query: "Positive", "Negative", "Neutral", or more granular tones such as "frustrated", "curious", etc.
-- For non-conversational questions, set to "null".
-
 Complexity Field:
 - Classify the complexity of the question:
   - "simple" for direct questions requiring a short, concise response.
@@ -31,7 +27,6 @@ Your output should strictly use the following schema:
 {{
     "classification": "string",
     "sub-action": "string",
-    "tone" : "string",
     "complexity": "string"
 }}
 

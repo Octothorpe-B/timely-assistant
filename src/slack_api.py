@@ -69,6 +69,7 @@ def process_event(slack_token, app_token, channel_id):
     # Set to track processed event IDs.
     processed_event_ids = set()
 
+
     def handle_events(client: SocketModeClient, request: SocketModeRequest):
         """Function to handle the incoming events from the Slack API and invoke the correct outgoing responses."""
         nonlocal latest_timestamp

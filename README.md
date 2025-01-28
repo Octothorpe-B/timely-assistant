@@ -1,4 +1,4 @@
-# timely-assistant
+# Timely Assistant
 
 [![Codecov Badge](https://codecov.io/gh/Octothorpe-B/timely-assistant/graph/badge.svg?token=2YUXJFCAKZ)](https://codecov.io/gh/Octothorpe-B/timely-assistant)
 
@@ -11,7 +11,6 @@ A Python-based time management bot that calculates travel times based on Google 
 - [Setup & Configuration](#setup--configuration)
 - [Running the Bot](#running-the-bot)
 - [Testing](#testing)
-- [Best Practices](#best-practices)
 - [FAQ](#faq)
 
 ## Overview

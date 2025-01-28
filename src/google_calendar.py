@@ -99,8 +99,8 @@ def calculate_time_bounds(time_field, time_direction_field, local_tz):
             )
             end_time = local_tz.localize(
                 datetime(now.year, now.month, now.day + 1, 23, 59, 59)
-
-        elif time_direction_field = "yesterday":
+            )
+        elif time_direction_field == "yesterday":
             start_time = local_tz.localize(
                 datetime(now.year, now.month, now.day - 1, 0, 0, 0)
             )

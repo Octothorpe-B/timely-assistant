@@ -7,6 +7,7 @@ from slack_sdk.socket_mode import SocketModeClient
 from slack_sdk.socket_mode.request import SocketModeRequest
 from slack_sdk.socket_mode.response import SocketModeResponse
 from flask import Flask, request, jsonify
+from dotenv import load_dotenv
 import os
 import logging
 import time
@@ -26,6 +27,8 @@ app = Flask(__name__)
 
 def configure_slack_client():
     """Function to configure the Slack client to communicate with the user."""
+    load_dotenv()
+    
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     app_token = os.getenv("SLACK_APP_TOKEN")
     channel_id = os.getenv("SLACK_CHANNEL_ID")

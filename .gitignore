@@ -3,3 +3,6 @@ src/credentials/**
 
 # Ignore all files in src/data and its subdirectories
 src/data/**
+
+# Ignore all .env files
+.env

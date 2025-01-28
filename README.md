@@ -22,7 +22,7 @@ A Python-based time management bot that calculates travel times based on Google 
 2. Calculating travel time to destinations.
 3. Notifying users via Slack when they need to leave and arrive on time.
 
-The bot uses the [Slack API](https://slackapi.com/) for notifications and integrates with the [Google Calendar API](https://developers.google.com/calendar) for event retrieval.
+The bot uses the [Slack API](https://api.slack.com/) for notifications and integrates with the [Google Calendar API](https://developers.google.com/calendar/api/guides/overview) for event retrieval.
 
 ## Installation
 
@@ -71,7 +71,7 @@ export SLACK_BOT_TOKEN="your_bot_token"
 export SLACK_APP_TOKEN="your_app_token"
 ```
 
-You can create your Slack app and generate tokens at the [Slack API OAuth Page](https://slackapi.com/).
+You can create your Slack app and generate tokens at the [Slack API OAuth Page](https://api.slack.com/apps).
 
 ### Google Calendar Setup
 

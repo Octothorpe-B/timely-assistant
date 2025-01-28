@@ -15,13 +15,7 @@ A Python-based time management bot that calculates travel times based on Google 
 
 ## Overview
 
-`timely-assistant` is designed to help users manage their travel times by:
-
-1. Integrating with Google Calendar to retrieve event details.
-2. Calculating travel time to destinations.
-3. Notifying users via Slack when they need to leave and arrive on time.
-
-The bot uses the [Slack API](https://api.slack.com/) for notifications and integrates with the [Google Calendar API](https://developers.google.com/calendar/api/guides/overview) for event retrieval.
+Coming soon!
 
 ## Installation
 

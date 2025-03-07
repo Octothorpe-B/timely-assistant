@@ -98,9 +98,7 @@ class CalendarAction(BaseAction):
             prompt_template = file.read()
 
         # Format the calendar prompt with the calendar data.
-        calendar_prompt = prompt_template.format(
-            classifier_data=classifier_values_list, calendar_data=calendar_data_string
-        )
+        calendar_prompt = prompt_template.format(calendar_data=calendar_data_string)
 
         return calendar_prompt
 

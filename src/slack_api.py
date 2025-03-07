@@ -28,7 +28,7 @@ app = Flask(__name__)
 def configure_slack_client():
     """Function to configure the Slack client to communicate with the user."""
     load_dotenv()
-    
+
     slack_token = os.getenv("SLACK_BOT_TOKEN")
     app_token = os.getenv("SLACK_APP_TOKEN")
     channel_id = os.getenv("SLACK_CHANNEL_ID")
@@ -72,7 +72,6 @@ def process_event(slack_token, app_token, channel_id):
     # Set to track processed event IDs.
     processed_event_ids = set()
 
-
     def handle_events(client: SocketModeClient, request: SocketModeRequest):
         """Function to handle the incoming events from the Slack API and invoke the correct outgoing responses."""
         nonlocal latest_timestamp
@@ -85,7 +84,6 @@ def process_event(slack_token, app_token, channel_id):
 
         if request.type == "events_api":
             event = request.payload["event"]
-
             # Extract the event timestamp
             event_ts = event.get("event_ts")
             print(f"Received event: {event}")
@@ -169,7 +167,6 @@ def handle_message(user, question, channel):
     """Function to handle incoming messages to the bot."""
     # Obtain the slack token from the environment variables.
     slack_token = os.getenv("SLACK_BOT_TOKEN")
-
     # Setup and obtain the classification and conversational models.
     classification_model = assistant.initialize_classification_model(
         "src/prompt-templates/classifier-prompt.txt"
@@ -194,6 +191,8 @@ def handle_message(user, question, channel):
     action_prompt = action.execute()
 
     # print("action_result type:", type(action_result))
+    # Apply the new action result.
+    # TODO: a a
     print("action_result: ", action_prompt)
 
     # Setup and obtain the conversational model.

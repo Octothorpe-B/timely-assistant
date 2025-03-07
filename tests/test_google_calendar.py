@@ -113,12 +113,10 @@ def test_is_all_day_event():
     assert google_calendar.is_all_day_event("10:00 AM", "11:00 AM") == False
 
 
-@pytest.mark.parametrize("time_field,time_direction", [
-    ("null", "today"),
-    ("1 Week", "after"),
-    ("2 Years", "before"),
-    ("null", "null")
-])
+@pytest.mark.parametrize(
+    "time_field,time_direction",
+    [("null", "today"), ("1 Week", "after"), ("2 Years", "before"), ("null", "null")],
+)
 def test_calculate_time_bounds_variations(time_field, time_direction):
     local_tz = pytz.timezone("America/New_York")
     start_time_iso, end_time_iso = google_calendar.calculate_time_bounds(
@@ -138,7 +136,10 @@ def test_fetch_events_valid(mock_fetch_events):
     assert result == mock_events_result
 
 
-@patch("google_calendar.fetch_events", side_effect=HttpError(Mock(status=400), b"Error message"))
+@patch(
+    "google_calendar.fetch_events",
+    side_effect=HttpError(Mock(status=400), b"Error message"),
+)
 def test_get_time_bounded_events_http_error(mock_fetch_events):
     service = Mock()
     classifications = {"time": "1 Hour", "time-direction": "after"}

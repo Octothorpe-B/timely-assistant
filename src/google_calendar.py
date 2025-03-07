@@ -10,6 +10,9 @@ from datetime import datetime, timedelta
 import json
 import pytz
 
+import event_utils
+import time_utils
+
 # If modifying these scopes, delete the file token.json.
 SCOPES = ["https://www.googleapis.com/auth/calendar.readonly"]
 
@@ -65,98 +68,30 @@ def initialize_connection():
     return service
 
 
-def calculate_time_bounds(time_field, time_direction_field, local_tz):
-    """
-    Calculate the time bounding fields based on the provided time field and time direction field.
-
-    Parameters:
-    time_field (str): The time field representing the amount of time (e.g., "15 Minutes", "2 Hours").
-    time_direction_field (str): The time direction field ("before", "after", "today", or "null").
-    local_tz (pytz.timezone): The local time zone.
-
-    Returns:
-    tuple: A tuple containing the start and end times in ISO 8601 format.
-    """
-    print(
-        f"calculate_time_bounds called with: {time_field}, {time_direction_field}, {local_tz}"
-    )
-
-    # Get the current date and time in the specified time zone.
-    now = datetime.now(local_tz)
-
-    if time_field == "null":
-        # Handle the case where time_field is "null"
-        if time_direction_field == "today":
-            start_time = local_tz.localize(
-                datetime(now.year, now.month, now.day, 0, 0, 0)
-            )
-            end_time = local_tz.localize(
-                datetime(now.year, now.month, now.day, 23, 59, 59)
-            )
-        elif time_direction_field == "tomorrow":
-            start_time = local_tz.localize(
-                datetime(now.year, now.month, now.day + 1, 0, 0, 0)
-            )
-            end_time = local_tz.localize(
-                datetime(now.year, now.month, now.day + 1, 23, 59, 59)
-            )
-        elif time_direction_field == "yesterday":
-            start_time = local_tz.localize(
-                datetime(now.year, now.month, now.day - 1, 0, 0, 0)
-            )
-            end_time = local_tz.localize(
-                datetime(now.year, now.month, now.day - 1, 23, 59, 59)
-            )
-        else:
-            start_time = now
-            end_time = now
+def route_calculate_time_bounds(classifications, local_tz):
+    """Function to route the user's request to the corresponding function to correctly provide the requested date range for calendar events."""
+    # Treat None and "null" as equivalent.
+    specific_date = classifications[2]
+    if specific_date is None or specific_date == "null":
+        specific_date = "null"
+    
+    if classifications[1] != "null" and specific_date == "null":
+        start_time_iso, end_time_iso = event_utils.calculate_relative_time_bounds(
+            classifications, local_tz
+        )
+        return start_time_iso, end_time_iso
+    elif classifications[1] != "null" and specific_date != "null":
+        start_time_iso, end_time_iso = event_utils.calculate_relative_and_exact_time_bounds(
+            classifications, local_tz
+        )
+        return start_time_iso, end_time_iso
+    elif classifications[1] == "null" and specific_date != "null":
+        start_time_iso, end_time_iso = event_utils.calculate_exact_range_time_bounds(
+            classifications, local_tz
+        )
+        return start_time_iso, end_time_iso
     else:
-        # Parse the time field to extract the numerical value and the unit.
-        time_value, time_unit = time_field.split()
-        time_value = int(time_value)
-
-        print("time-value", time_value)
-        print("time-unit", time_unit)
-
-        # Calculate the time delta based on the unit.
-        if time_unit.lower() in ["minute", "minutes"]:
-            time_delta = timedelta(minutes=time_value)
-        elif time_unit.lower() in ["hour", "hours"]:
-            time_delta = timedelta(hours=time_value)
-        elif time_unit.lower() in ["day", "days"]:
-            time_delta = timedelta(days=time_value)
-        elif time_unit.lower() in ["week", "weeks"]:
-            time_delta = timedelta(weeks=time_value)
-        elif time_unit.lower() in ["year", "years"]:
-            time_delta = timedelta(days=365 * time_value)
-
-        # Calculate the start and end times based on the time direction field.
-        if time_direction_field == "before":
-            start_time = now - time_delta
-            end_time = now
-        elif time_direction_field == "after":
-            start_time = now
-            end_time = now + time_delta
-        elif time_direction_field == "today":
-            start_time = local_tz.localize(
-                datetime(now.year, now.month, now.day, 0, 0, 0)
-            )
-            end_time = local_tz.localize(
-                datetime(now.year, now.month, now.day, 23, 59, 59)
-            )
-        elif time_direction_field == "null":
-            start_time = now
-            end_time = now
-
-    # Format the start and end times to ISO 8601 format.
-    start_time_iso = start_time.isoformat()
-    end_time_iso = end_time.isoformat()
-
-    print(f"Start Time: {start_time_iso}")
-    print(f"End Time: {end_time_iso}")
-
-    # Return the start and end times in ISO 8601 format.
-    return start_time_iso, end_time_iso
+        pass
 
 
 def fetch_events(service, start_of_day_iso, end_of_day_iso):
@@ -186,14 +121,14 @@ def process_calendar_event(event, local_tz):
     try:
         # Get the start and end time of the calendar event.
         start_time, end_time = get_event_times(event)
-        start_time_formatted, end_time_formatted = format_event_times(
+        start_time_formatted, end_time_formatted = event_utils.format_event_times(
             start_time, end_time, local_tz
         )
         summary = event.get("summary", "No Title")
         location = event.get("location", "No Location")
 
         # Determine if the event is an all-day event or a timed event.
-        if is_all_day_event(start_time_formatted, end_time_formatted):
+        if event_utils.is_all_day_event(start_time_formatted, end_time_formatted):
             event_type = "all-day"
         else:
             event_type = "timed"
@@ -237,90 +172,79 @@ def get_event_times(event):
     return start, end
 
 
-def format_event_times(start, end, local_tz):
-    """Format event times to 12-hour format with AM/PM."""
-    # Ensure start and end are datetime objects
-    if isinstance(start, str):
-        start = datetime.fromisoformat(start)
-    if isinstance(end, str):
-        end = datetime.fromisoformat(end)
-
-    # Format the start and end times to 12-hour format with AM/PM.
-    start_time_formatted = start.astimezone(local_tz).strftime("%I:%M %p")
-    end_time_formatted = end.astimezone(local_tz).strftime("%I:%M %p")
-
-    # Return the formatted start and end times.
-    return start_time_formatted, end_time_formatted
-
-
-def is_all_day_event(start_time_formatted, end_time_formatted):
-    """Check if an event is an all-day event."""
-    if start_time_formatted == "12:00 AM" and end_time_formatted == "12:00 AM":
-        return True
-    else:
-        return False
-
-
 def get_time_bounded_events(service, classifications):
     """Function to obtain today's events stored in Google Calendar"""
-    try:
-        # Initialize an empty list for the calendar events.
-        calendar_events = []
+    # try:
+    # Initialize an empty list for the calendar events.
+    calendar_events = []
 
-        # Define your local time zone
-        local_tz = pytz.timezone(
-            "America/New_York"
-        )  # Replace with your local time zone
+    # Define your local time zone
+    local_tz = pytz.timezone("America/New_York")  # Replace with your local time zone
 
-        classifications = list(classifications.values())
-        print("classifications!", classifications)
+    classifications = list(classifications.values())
+    print("classifications!", classifications)
 
-        # Ensure classifications are correctly handled
-        classification1 = (
-            classifications[0].lower()
-            if classifications[0] and classifications[0].lower() != "none"
-            else "null"
-        )
-        classification2 = (
-            classifications[1].lower()
-            if classifications[1] and classifications[1].lower() != "none"
-            else "null"
-        )
+    # Ensure classifications are correctly handled
+    classification1 = (
+        classifications[0].lower()
+        if classifications[0] and classifications[0].lower() != "none"
+        else "null"
+    )
+    classification2 = (
+        classifications[1].lower()
+        if classifications[1] and classifications[1].lower() != "none"
+        else "null"
+    )
+    classification3 = (
+        classifications[2].lower()
+        if classifications[2] and classifications[2].lower() != "none"
+        else "null"
+    )
 
-        print("classification1", classification1)
-        print("classification2", classification2)
+    start_time_iso, end_time_iso = route_calculate_time_bounds(
+        classifications, local_tz
+    )
 
-        # Obtain the current day events at the start of the user's time frame and the end of the user's time frame.
-        start_time_iso, end_time_iso = calculate_time_bounds(
-            classification1, classification2, local_tz
-        )
+    print(f"Start Time: {start_time_iso}")
+    print(f"End Time: {end_time_iso}")
 
-        print(f"Start Time: {start_time_iso}")
-        print(f"End Time: {end_time_iso}")
+    events_result = fetch_events(service, start_time_iso, end_time_iso)
 
-        events_result = fetch_events(service, start_time_iso, end_time_iso)
+    # Obtain the events from the events_result dictionary.
+    events = events_result.get("items", [])
 
-        # Obtain the events from the events_result dictionary.
-        events = events_result.get("items", [])
-
-        # If there are no events, return an empty list.
-        if not events:
-            return []
-
-        for event in events:
-            formatted_event = process_calendar_event(event, local_tz)
-            calendar_events.append(formatted_event)
-            print(formatted_event)
-
-        # Return the calendar events.
-        if len(calendar_events) > 0:
-            return calendar_events
-        else:
-            return "There are no calendar events within the specified timeframe."
-
-    except HttpError as error:
-        print(f"An error occurred: {error}")
+    # If there are no events, return an empty list.
+    if not events:
         return []
-    except Exception as e:
-        print(f"An unexpected error occurred in get_time_bounded_events(): {e}")
-        return []
+
+    for event in events:
+        formatted_event = process_calendar_event(event, local_tz)
+        calendar_events.append(formatted_event)
+        print(formatted_event)
+
+    # Return the calendar events.
+    if len(calendar_events) > 0:
+        return calendar_events
+    else:
+        return "There are no calendar events within the specified timeframe."
+
+    # except HttpError as error:
+    #    print(f"An error occurred: {error}")
+    #    return []
+    # except Exception as e:
+    #    print(f"An unexpected error occurred in get_time_bounded_events(): {e}")
+    #    return []
+
+
+if __name__ == "__main__":
+    classifications = {
+        "query-type": "recurring",
+        "relative-time-direction": "0 Day, after",
+        "specific-date": "null",
+    }
+
+    service = initialize_connection()
+
+    calendar_events = get_time_bounded_events(service, classifications)
+
+    print("\nCalendar Events:\n", calendar_events)

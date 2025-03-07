@@ -2,7 +2,7 @@
 
 [![Codecov Badge](https://codecov.io/gh/Octothorpe-B/timely-assistant/graph/badge.svg?token=2YUXJFCAKZ)](https://codecov.io/gh/Octothorpe-B/timely-assistant)
 
-A Python-based time management bot that calculates travel times based on Google Calendar events and notifies users when to leave to arrive on time.
+A Python-based time management bot that uses your Google Calendar events to communicate with you about your schedule.
 
 ## Table of Contents
 

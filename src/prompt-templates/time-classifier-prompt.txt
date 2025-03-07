@@ -4,29 +4,49 @@ You are a text classifier for an intelligent AI assistant. Your answer will be f
 Ensure the output is valid JSON as it will be parsed using the `json.loads()` function in Python.
 Classify the input text based on the instructions provided below.
 
-Time Field:
-- Assess the number of the time length unit related to the user's request. 
-- If the user asks a calendar or reminders related question saying "Show me reminders for the next week." The user is asking for all of their reminders from today to "1 Week" later.
-- Express in numerical format with time metrics (e.g., "15 Minutes" or "2 Hours", "5 Days" "2 Weeks" "1 Year").
-- When the user says they want to see events for the next week, your answer should be "1 Week".
-- When the user says that they want to see events for the past year, your answer should be "1 Year".
-- If the user is requesting something for today your answer should be "null".
-- If the time metric is unclear, set this field to "null".
+Query Type Field:
+- Identify the overall intent behind the calendar query.
+- Use "relative" for queries specifying a time period relative to today (e.g., "next week", "past month").
+- Use "exact-range" when the query includes explicit start and end dates (e.g., "may 3rd to may 28th 2024", "from 2025/03/10 to 2025/03/15").
+- Use "recurring" for queries related to regularly scheduled events (e.g., "my weekly meeting", "daily reminders").
+- For ambiguous or unclear queries that don’t match the above, classify as "None".
 
-Time-Direction Field:
-- Determine whether the user is requesting something "before" or "after" in relation to what the user is asking for.
-- "before": The user is asking for searching or creating or updating or deleting that takes place in the past.
-- "after": The user is asking for searching or creating or updating or deleting that takes place in the future.
-- "today": The user is asking for searching or creating or updating or deleting something that takes place today.
-- "null": It's unclear what time direction the user is asking for.
+Relative-Time-Direction Field:
+- Determine the number of time length unit and the relation of the user's language in their request and whether it's past tense, future tense, or current tense.
+- Your answer should adhere to the following correct examples: "1 week, after", "2 months, before", "4 years, after".
+- Use these instructions for the first part of your answer, before the comma:
+    - Assess the number of the time length unit related to the user's request.
+    - If the user asks a calendar or reminders related question saying "Show me reminders for the next week.", your answer should be "1 Week".
+    - If the user asks for a calendar or reminders related question saying "Show me reminders for today", your answer should be "0 Day".
+    - If the user asks for a calendar or reminders related question saying "Show me all calendar events for yesterday", your answer should be "1 Day".
+    - Express in numerical format with time metrics (e.g., "15 Minutes" or "2 Hours", "5 Days" "2 Weeks" "1 Year").
+    - When the user says they want to see events for the next week, your answer should be "1 Week".
+    - When the user says that they want to see events for the past year, your answer should be "1 Year".
+    - If the time metric is unclear, set this field to "None".
+- Use these instructions for the second part of your answer, after the comma:
+    - "before": The user is asking for searching that takes place in the past.
+    - "after": The user is asking for searching that takes place in the future.
+    - "same": The user is asking for something that takes place in the same day/week/month/year.
+        - If the first part of your answer is "0" your answer for this part should be "same".
+    - "None": It's unclear what time direction the user is asking for.
+- If both parts of your answers are None ex: "None, None", your answer should just be "None".
+
+Specific Date Field:
+- Determine the specific dates, related to the user's request.
+- If there are multiple dates in the user's request please include them all in your answer.
+- Examples of correct outputs: "March 2018", "January, June", "December 2014", "September 2nd, 2022", "monday, friday", "wednesday, thursday".
+- If there is no specific date than you should answer "None".
 
 Edge Cases:
-- If classification is unclear or ambiguous, classify as "other" or return "null" for sub-action and time fields.
+- If classification is unclear or ambiguous, classify as "other" for sub-action and time fields.
+- For queries that don't specify any specific dates but rather ask about a recurring event (e.g., "my weekly meeting"), classify the `specific-date` field as None.
 
 Your output should strictly use the following schema:
+```json
 {{
-    "time": "string",
-    "time-direction": "string"
+    "query-type": "string",
+    "relative-time-direction": "string",
+    "specific-date": "string"
 }}
 
 <|end|>

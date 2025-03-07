@@ -190,9 +190,7 @@ def handle_message(user, question, channel):
     action = actions.action_factory(classifications, question)
     action_prompt = action.execute()
 
-    # print("action_result type:", type(action_result))
     # Apply the new action result.
-    # TODO: a a
     print("action_result: ", action_prompt)
 
     # Setup and obtain the conversational model.

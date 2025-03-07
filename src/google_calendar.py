@@ -71,21 +71,23 @@ def initialize_connection():
 def route_calculate_time_bounds(classifications, local_tz):
     """Function to route the user's request to the corresponding function to correctly provide the requested date range for calendar events."""
     # Treat None and "null" as equivalent.
-    specific_date = classifications[2]
-    if specific_date is None or specific_date == "null":
-        specific_date = "null"
+    # specific_date = classifications[2]
+    # if specific_date is None or specific_date == "null":
+    #    specific_date = "null"
     
-    if classifications[1] != "null" and specific_date == "null":
+    print("Type Check: ", type(classifications[2]))
+    
+    if classifications[1] != None and classifications[2] == None:
         start_time_iso, end_time_iso = event_utils.calculate_relative_time_bounds(
             classifications, local_tz
         )
         return start_time_iso, end_time_iso
-    elif classifications[1] != "null" and specific_date != "null":
+    elif classifications[1] != None and classifications[2] != None:
         start_time_iso, end_time_iso = event_utils.calculate_relative_and_exact_time_bounds(
             classifications, local_tz
         )
         return start_time_iso, end_time_iso
-    elif classifications[1] == "null" and specific_date != "null":
+    elif classifications[1] == None and classifications[2] != None:
         start_time_iso, end_time_iso = event_utils.calculate_exact_range_time_bounds(
             classifications, local_tz
         )

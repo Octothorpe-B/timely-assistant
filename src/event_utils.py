@@ -121,10 +121,10 @@ def calculate_relative_time_bounds(classifications, local_tz):
 def calculate_exact_range_time_bounds(classifications, local_tz):
     """Calculate the time bounding fields based on the provided time field and time direction field."""
 
-    return 69, 69
+    return "Ran: ", "calculate_exact_range_time_bounds() in event_utils.py"
 
 
 def calculate_relative_and_exact_time_bounds(classifications, local_tz):
     """Calculate the time bounding fields based on the provided time field and time direction field."""
 
-    return 96, 96
+    return "Ran: ", "calculate_exact_range_time_bounds() in event_utils.py"
